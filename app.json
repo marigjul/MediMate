@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "dima-app",
-    "slug": "dima-app",
+    "name": "medimate",
+    "slug": "medimate",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "dimaapp",
+    "scheme": "medimate",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
