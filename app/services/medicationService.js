@@ -34,13 +34,13 @@ export const medicationService = {
 
         // If cache is newer than 30 days, return cached data
         if (cacheAge < maxAge) {
-          console.log("✅ Using cached FDA data");
+          console.log("Using cached FDA data");
           return { success: true, data: cachedData.fdaData, fromCache: true };
         }
       }
 
       // Step 2: If not in cache or outdated, fetch from FDA API
-      console.log("🌐 Fetching from FDA API...");
+      console.log("Fetching from FDA API...");
       const response = await fetch(
         `${FDA_API_URL}?search=openfda.brand_name:"${medicationName}"&limit=1`
       );
