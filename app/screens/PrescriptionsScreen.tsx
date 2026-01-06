@@ -4,7 +4,7 @@ import { medicationService } from "../services/medicationService";
 
 export default function PrescriptionsScreen() {
   const testFullFlow = async () => {
-    console.log("🧪 Starting full test...");
+    console.log("Starting full test...");
     
     // 1. Login with existing user
     const login = await authService.login("jan.banan@hotmail.com", "passord");
@@ -44,7 +44,7 @@ export default function PrescriptionsScreen() {
         style={{ backgroundColor: "#007AFF", padding: 20, borderRadius: 10 }}
       >
         <Text style={{ color: "white", textAlign: "center", fontSize: 16 }}>
-          🧪 Test Full Flow (Check Console)
+          Test Full Flow (Check Console)
         </Text>
       </TouchableOpacity>
       
