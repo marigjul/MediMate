@@ -11,11 +11,6 @@ import {
   FIREBASE_APP_ID,
 } from "@env";
 
-// 🔍 CHECK: Log to verify env vars are loaded
-console.log("🔥 Firebase Config Check:");
-console.log("API Key exists:", !!FIREBASE_API_KEY);
-console.log("Project ID:", FIREBASE_PROJECT_ID);
-
 const firebaseConfig = {
   apiKey: FIREBASE_API_KEY,
   authDomain: FIREBASE_AUTH_DOMAIN,
@@ -27,7 +22,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-console.log("✅ Firebase initialized successfully!");
+console.log("Firebase initialized successfully");
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
