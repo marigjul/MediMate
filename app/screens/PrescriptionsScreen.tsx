@@ -1,3 +1,5 @@
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,12 +19,20 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/card";
+import { useAuth } from "../contexts/AuthContext";
+import { medicationService } from "../services/medicationService";
+import type { PrescriptionsStackParamList } from "../types/navigation";
 
-// Icons (replace these with actual icon components later)
+// Icons (you can replace these with actual icon components later)
 const PlusIcon = () => <Text style={styles.icon}>+</Text>;
 const ChevronRightIcon = () => <Text style={styles.chevron}>›</Text>;
 const CalendarIcon = () => <Text style={styles.iconEmoji}>📅</Text>;
 const TrendingUpIcon = () => <Text style={styles.iconEmoji}>📈</Text>;
+
+type PrescriptionsScreenNavigationProp = NativeStackNavigationProp<
+  PrescriptionsStackParamList,
+  "PrescriptionsMain"
+>;
 
 interface Medication {
   id: string;
@@ -41,84 +51,55 @@ interface Medication {
 }
 
 export default function PrescriptionsScreen() {
+  const navigation = useNavigation<PrescriptionsScreenNavigationProp>();
+  const { user } = useAuth();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Stub data for initial development
-  const stubMedications: Medication[] = [
-    {
-      id: "1",
-      medicationName: "amoxicillin",
-      schedule: {
-        times: ["09:00", "17:00", "21:00"],
-        frequency: "Every 8h",
-        duration: "14 days",
-      },
-      streak: 3,
-      fdaData: {
-        brandName: "Amoxicillin",
-        genericName: "Amoxicillin",
-      },
-    },
-    {
-      id: "2",
-      medicationName: "lisinopril",
-      schedule: {
-        times: ["09:00"],
-        frequency: "1x daily",
-        duration: "permanent",
-      },
-      streak: 14,
-      refillReminder: 30,
-      fdaData: {
-        brandName: "Lisinopril",
-        genericName: "Lisinopril",
-      },
-    },
-  ];
-
+  // Load medications when component mounts or user changes
   useEffect(() => {
-    loadMedications();
-  }, []);
+    if (user) {
+      loadMedications();
+    } else {
+      setLoading(false);
+      setMedications([]);
+    }
+  }, [user]);
 
   const loadMedications = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
+      setError(null);
 
-      // For now, use stub data while Firebase auth is being set up
-      // TODO: Implement proper auth flow before calling getCurrentUser()
-      setMedications(stubMedications);
+      console.log("Loading medications for user:", user.uid);
 
-      /* Uncomment this when auth is properly set up:
-      const user = authService.getCurrentUser();
+      const result = await medicationService.getUserMedications(user.uid);
 
-      if (user) {
-        const result = await medicationService.getUserMedications(user.uid);
-        if (
-          result.success &&
-          result.medications &&
-          result.medications.length > 0
-        ) {
-          setMedications(result.medications);
-        } else {
-          setMedications(stubMedications);
-        }
+      if (result.success) {
+        console.log("Medications loaded:", result.medications?.length || 0);
+        setMedications(result.medications || []);
       } else {
-        setMedications(stubMedications);
+        console.error("Failed to load medications:", result.error);
+        setError(result.error || "Failed to load medications");
+        setMedications([]);
       }
-      */
     } catch (error) {
       console.error("Error loading medications:", error);
-      setMedications(stubMedications);
+      setError("An unexpected error occurred");
+      setMedications([]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddMedication = () => {
-    // TODO: Navigate to medication search screen
-    // This will connect to FDA API and medicationService.addMedicationWithFDA
-    console.log("Add Medication button pressed - will implement navigation");
+    navigation.navigate("MedicationSearch");
   };
 
   const handleMedicationPress = (medication: Medication) => {
@@ -220,6 +201,7 @@ export default function PrescriptionsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3B82F6" />
+        <Text style={styles.loadingText}>Loading your medications...</Text>
       </View>
     );
   }
@@ -248,14 +230,28 @@ export default function PrescriptionsScreen() {
           Add Medication
         </Button>
 
+        {/* Error Message */}
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>❌ {error}</Text>
+            <TouchableOpacity
+              onPress={loadMedications}
+              style={styles.retryButton}
+            >
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Medications List */}
         <View style={styles.medicationsList}>
           {medications.length > 0 ? (
             medications.map(renderMedicationCard)
           ) : (
             <View style={styles.emptyState}>
+              <Text style={styles.emptyStateTitle}>No medications yet</Text>
               <Text style={styles.emptyStateText}>
-                No medications yet. Add your first medication to get started.
+                Add your first medication to start tracking your prescriptions
               </Text>
             </View>
           )}
@@ -274,7 +270,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#E0F2FE",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#6B7280",
   },
   scrollView: {
     flex: 1,
@@ -331,14 +332,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
   },
+  errorContainer: {
+    backgroundColor: "#FEE2E2",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#DC2626",
+    marginRight: 12,
+  },
+  retryButton: {
+    backgroundColor: "#EF4444",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
   emptyState: {
-    padding: 40,
+    padding: 60,
     alignItems: "center",
     justifyContent: "center",
   },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginBottom: 8,
+  },
   emptyStateText: {
     fontSize: 16,
-    color: "#9CA3AF",
+    color: "#6B7280",
     textAlign: "center",
     lineHeight: 24,
   },
