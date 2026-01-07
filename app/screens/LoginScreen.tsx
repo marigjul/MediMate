@@ -99,7 +99,6 @@ export default function LoginScreen() {
         setError(errorMessage);
         console.error('Sign up failed:', result.error);
       }
-      // No need to navigate - AuthContext will handle it automatically
     } catch (error) {
       setError('An unexpected error occurred');
       console.error('Sign up error:', error);
