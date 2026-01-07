@@ -24,6 +24,7 @@ export type HomeStackParamList = {
 // Prescriptions Stack - nested screens from Prescriptions tab
 export type PrescriptionsStackParamList = {
   PrescriptionsMain: undefined;
+  MedicationSearch: undefined;
   // Add more prescription-related screens here
   // Example: AddPrescription: undefined;
 };
