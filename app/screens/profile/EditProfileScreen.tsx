@@ -294,6 +294,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    // @ts-ignore - outlineColor is web-only
+    outlineColor: '#2563EB',
   },
   disabledInput: {
     backgroundColor: '#E5E7EB',

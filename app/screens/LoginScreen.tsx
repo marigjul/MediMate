@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/card';
 import { authService } from '../services/authService';
@@ -261,6 +261,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    // @ts-ignore - outlineColor is web-only
+    outlineColor: '#2563EB',
   },
   button: {
     backgroundColor: '#2563EB',
