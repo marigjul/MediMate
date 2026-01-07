@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/card';
 import { authService } from '../services/authService';
@@ -99,7 +99,6 @@ export default function LoginScreen() {
         setError(errorMessage);
         console.error('Sign up failed:', result.error);
       }
-      // No need to navigate - AuthContext will handle it automatically
     } catch (error) {
       setError('An unexpected error occurred');
       console.error('Sign up error:', error);
@@ -261,6 +260,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    // @ts-ignore - outlineColor is web-only
+    outlineColor: '#2563EB',
   },
   button: {
     backgroundColor: '#2563EB',
