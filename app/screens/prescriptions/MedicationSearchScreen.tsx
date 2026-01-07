@@ -293,10 +293,13 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     paddingVertical: 0,
     paddingHorizontal: 0,
+    // @ts-ignore - web-only properties
     outline: "none",
+    // @ts-ignore
     outlineWidth: 0,
+    // @ts-ignore
     borderWidth: 0,
-  },
+  } as any,
   searchButton: {
     backgroundColor: "#3B82F6",
     paddingHorizontal: 20,
