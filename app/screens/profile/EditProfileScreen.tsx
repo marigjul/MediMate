@@ -109,7 +109,7 @@ export default function EditProfileScreen() {
         // Navigate back after a short delay
         setTimeout(() => {
           navigation.goBack();
-        }, 1500);
+        }, 1100);
       }
     } catch (error) {
       console.error('Error updating profile:', error);
