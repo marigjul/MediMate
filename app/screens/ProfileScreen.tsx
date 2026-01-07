@@ -52,9 +52,6 @@ export default function ProfileScreen() {
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <View style={styles.avatarContainer}>
-            <Ionicons name="person-circle" size={80} color="#2563EB" />
-          </View>
           <Text style={styles.name}>{user?.displayName || 'User'}</Text>
           <Text style={styles.email}>{user?.email}</Text>
         </View>
@@ -133,9 +130,6 @@ const styles = StyleSheet.create({
     paddingVertical: 32,
     backgroundColor: '#fff',
     borderRadius: 12,
-    marginBottom: 16,
-  },
-  avatarContainer: {
     marginBottom: 16,
   },
   name: {
