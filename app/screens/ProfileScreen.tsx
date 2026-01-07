@@ -1,21 +1,148 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Button } from "../components/button";
+import { Card, CardContent, CardHeader } from "../components/card";
+import ConfirmationModal from "../components/ConfirmationModal";
+import { useAuth } from "../contexts/AuthContext";
+import { authService } from "../services/authService";
+import type { ProfileNavigationProp } from "../types/navigation";
 
 export default function ProfileScreen() {
+  const navigation = useNavigation<ProfileNavigationProp>();
+  const { user, refreshUser } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Refresh user data when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      refreshUser();
+    }, [refreshUser])
+  );
+
+  const handleLogoutPress = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    setLoggingOut(true);
+    try {
+      const result = await authService.logout();
+      if (!result.success) {
+        console.error('Logout failed:', result.error);
+        alert('Failed to logout. Please try again.');
+        setLoggingOut(false);
+      }
+      // On success, AuthContext will automatically redirect to LoginScreen
+      // No need to manually navigate
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('An error occurred during logout.');
+      setLoggingOut(false);
+    }
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>You are now on profile page</Text>
-    </View>
+    <ScrollView style={styles.scrollView}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.name}>{user?.displayName || 'User'}</Text>
+          <Text style={styles.email}>{user?.email}</Text>
+        </View>
+
+        <Card style={styles.card}>
+          <CardHeader>
+            <Text style={styles.cardTitle}>Account Settings</Text>
+          </CardHeader>
+          <CardContent>
+            <TouchableOpacity 
+              style={styles.menuItem}
+              onPress={() => navigation.navigate('EditProfile')}
+            >
+              <Ionicons name="person-outline" size={24} color="#374151" />
+              <Text style={styles.menuText}>Edit Profile</Text>
+              <Ionicons name="chevron-forward" size={24} color="#9CA3AF" />
+            </TouchableOpacity>
+          </CardContent>
+        </Card>
+
+        <Button 
+          variant="destructive"
+          onPress={handleLogoutPress}
+          style={styles.logoutButton}
+          disabled={loggingOut}
+        >
+          {loggingOut ? 'Logging out...' : 'Logout'}
+        </Button>
+      </View>
+
+      <ConfirmationModal
+        visible={showLogoutModal}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+        destructive
+      />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+  },
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
+    padding: 16,
   },
-  text: {
-    fontSize: 20,
+  header: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  name: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  email: {
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  card: {
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  menuText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#374151',
+    marginLeft: 12,
+  },
+  logoutButton: {
+    marginTop: 8,
   },
 });
