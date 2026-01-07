@@ -44,13 +44,12 @@ export default function EditProfileScreen() {
       return;
     }
 
-    // Check if email or password is being changed
-    const isChangingEmail = email !== user?.email;
+    // Check if password is being changed
     const isChangingPassword = newPassword.trim() !== '';
 
-    // If changing email or password, current password is required
-    if ((isChangingEmail || isChangingPassword) && !currentPassword) {
-      setError('Current password is required to change email or password');
+    // If changing password, current password is required
+    if (isChangingPassword && !currentPassword) {
+      setError('Current password is required to change password');
       return;
     }
 
@@ -85,15 +84,7 @@ export default function EditProfileScreen() {
         }
       }
 
-      // Update email if changed
-      if (isChangingEmail && !hasError) {
-        const result = await authService.updateUserEmail(email, currentPassword);
-        
-        if (!result.success) {
-          setError(result.error || 'Failed to update email');
-          hasError = true;
-        }
-      }
+      // Email changes are disabled - skip email update
 
       // Update password if new password provided
       if (isChangingPassword && !hasError) {
@@ -153,15 +144,19 @@ export default function EditProfileScreen() {
             />
 
             <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              editable={!loading}
-            />
+            <View pointerEvents="none">
+              <TextInput
+                style={[styles.input, styles.disabledInput]}
+                value={email}
+                placeholder="Enter your email"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                editable={false}
+              />
+            </View>
+            <Text style={styles.helperText}>
+              Email cannot be changed
+            </Text>
           </CardContent>
         </Card>
 
@@ -206,7 +201,7 @@ export default function EditProfileScreen() {
             />
 
             <Text style={styles.helperText}>
-              * Required when changing email or password
+              * Required when changing password
             </Text>
           </CardContent>
         </Card>
@@ -299,6 +294,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+  },
+  disabledInput: {
+    backgroundColor: '#E5E7EB',
+    color: '#9CA3AF',
   },
   helperText: {
     fontSize: 12,
