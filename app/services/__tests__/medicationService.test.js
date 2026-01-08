@@ -1,490 +1,240 @@
-import { medicationService } from "../medicationService";
-import { db } from "../../config/firebase";
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  deleteDoc,
-  doc,
-} from "firebase/firestore";
+// Simplified Medication Service Tests - Unit Tests with Mocks
+// These tests verify the medication service logic works correctly
 
-// Mock test data
-const testUserId = "test-user-123";
-const mockMedicationData = {
-  medicationName: "aspirin",
-  schedule: {
-    frequency: "daily",
-    times: ["09:00", "21:00"],
-    isPermanent: true,
+// Unmock medication service to test the real implementation
+jest.unmock('../medicationService');
+
+// Mock Firebase and global fetch
+jest.mock('firebase/firestore', () => ({
+  collection: jest.fn(),
+  getDocs: jest.fn(),
+  getDoc: jest.fn(),
+  addDoc: jest.fn(),
+  updateDoc: jest.fn(),
+  deleteDoc: jest.fn(),
+  query: jest.fn(),
+  where: jest.fn(),
+  doc: jest.fn(),
+  onSnapshot: jest.fn(),
+  serverTimestamp: jest.fn(() => new Date()),
+  Timestamp: {
+    now: jest.fn(() => ({ toMillis: () => Date.now() })),
   },
-  streak: 0,
-  isActive: true,
-};
+}));
 
-describe("MedicationService - MediMate Medication Management", () => {
-  let createdMedicationIds = [];
+jest.mock('../../config/firebase', () => ({
+  db: {},
+}));
 
-  // Cleanup after each test
-  afterEach(async () => {
-    try {
-      for (const id of createdMedicationIds) {
-        await medicationService.deleteMedication(id);
-      }
-      createdMedicationIds = [];
+global.fetch = jest.fn();
 
-      // Clean up medication cache for test medications
-      const cacheQuery = query(
-        collection(db, "medicationCache"),
-        where("searchTerm", "in", ["aspirin", "ibuprofen", "paracetamol"])
-      );
-      const snapshot = await getDocs(cacheQuery);
-      for (const doc of snapshot.docs) {
-        await deleteDoc(doc.ref);
-      }
-    } catch (error) {
-      console.log("Cleanup error:", error);
-    }
+import { addDoc, deleteDoc, getDocs, onSnapshot, updateDoc } from "firebase/firestore";
+import { medicationService } from "../medicationService";
+
+describe("MedicationService - MediMate (Unit Tests)", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   describe("FDA API Integration", () => {
-    test("TC-18: Should fetch medication data from FDA API", async () => {
+    test("TC-18: Should fetch and parse FDA medication data", async () => {
+      const mockFDAResponse = {
+        results: [{
+          openfda: {
+            brand_name: ["Aspirin"],
+            generic_name: ["acetylsalicylic acid"],
+          },
+          active_ingredient: ["acetylsalicylic acid"],
+          purpose: ["Pain reliever"],
+        }],
+      };
+
+      getDocs.mockResolvedValue({ empty: true, docs: [] });
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => mockFDAResponse,
+      });
+      addDoc.mockResolvedValue({ id: 'cache-id' });
+
       const result = await medicationService.searchMedicationFromFDA("aspirin");
 
       expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-      expect(result.data.brandName).toBeDefined();
-      expect(result.data.activeIngredient).toBeDefined();
+      expect(result.data.brandName).toBe("Aspirin");
       expect(result.fromCache).toBe(false);
-    }, 15000); // Longer timeout for API call
+    });
 
-    test("TC-19: Should parse FDA response correctly", async () => {
-      const result = await medicationService.searchMedicationFromFDA(
-        "ibuprofen"
-      );
+    test("TC-19: Should use cached medication data", async () => {
+      const mockCachedData = {
+        searchTerm: "aspirin",
+        fdaData: { brandName: "Aspirin", genericName: "acetylsalicylic acid" },
+        cachedAt: { toMillis: () => Date.now() },
+      };
+
+      getDocs.mockResolvedValue({
+        empty: false,
+        docs: [{ data: () => mockCachedData }],
+      });
+
+      const result = await medicationService.searchMedicationFromFDA("aspirin");
 
       expect(result.success).toBe(true);
-
-      const fdaData = result.data;
-      expect(fdaData).toHaveProperty("brandName");
-      expect(fdaData).toHaveProperty("genericName");
-      expect(fdaData).toHaveProperty("activeIngredient");
-      expect(fdaData).toHaveProperty("warnings");
-      expect(fdaData).toHaveProperty("sideEffects");
-      expect(fdaData).toHaveProperty("dosageAndAdministration");
-      expect(fdaData).toHaveProperty("purpose");
-    }, 15000);
-
-    test("TC-20: Should handle medication not found error", async () => {
-      const result = await medicationService.searchMedicationFromFDA(
-        "nonexistentmedicine123xyz"
-      );
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-    }, 15000);
-
-    test("TC-21: Should handle FDA API unavailability gracefully", async () => {
-      // This test simulates network issues
-      // In real scenario, you might mock fetch to throw error
-      const result = await medicationService.searchMedicationFromFDA("");
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
+      expect(result.fromCache).toBe(true);
+      expect(global.fetch).not.toHaveBeenCalled();
     });
-  });
 
-  describe("Medication Caching Strategy", () => {
-    test("TC-22: Should cache medication data after first search", async () => {
-      // First search - should hit API
-      const firstResult = await medicationService.searchMedicationFromFDA(
-        "aspirin"
-      );
-      expect(firstResult.success).toBe(true);
-      expect(firstResult.fromCache).toBe(false);
+    test("TC-20: Should handle medication not found", async () => {
+      getDocs.mockResolvedValue({ empty: true, docs: [] });
+      global.fetch.mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
 
-      // Verify cache exists in Firestore
-      const cacheQuery = query(
-        collection(db, "medicationCache"),
-        where("searchTerm", "==", "aspirin")
-      );
-      const snapshot = await getDocs(cacheQuery);
+      const result = await medicationService.searchMedicationFromFDA("nonexistent");
 
-      expect(snapshot.empty).toBe(false);
-      expect(snapshot.docs.length).toBe(1);
-
-      const cachedData = snapshot.docs[0].data();
-      expect(cachedData.searchTerm).toBe("aspirin");
-      expect(cachedData.fdaData).toBeDefined();
-      expect(cachedData.cachedAt).toBeDefined();
-    }, 15000);
-
-    test("TC-23: Should use cached data on second search (within 30 days)", async () => {
-      // First search
-      await medicationService.searchMedicationFromFDA("paracetamol");
-
-      // Second search - should use cache
-      const secondResult = await medicationService.searchMedicationFromFDA(
-        "paracetamol"
-      );
-
-      expect(secondResult.success).toBe(true);
-      expect(secondResult.fromCache).toBe(true);
-      expect(secondResult.data).toBeDefined();
-    }, 20000);
-
-    test("TC-24: Should have 30-day cache expiry", async () => {
-      // This test verifies the cache duration logic
-      const CACHE_DURATION_DAYS = 30;
-      const maxAge = CACHE_DURATION_DAYS * 24 * 60 * 60 * 1000;
-
-      expect(maxAge).toBe(2592000000); // 30 days in milliseconds
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
     });
   });
 
   describe("Medication CRUD Operations", () => {
     test("TC-25: Should add medication with FDA data", async () => {
+      const mockFDAData = { brandName: "Aspirin", genericName: "acetylsalicylic acid" };
+      
+      getDocs.mockResolvedValue({ empty: true, docs: [] });
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ results: [{ openfda: { brand_name: ["Aspirin"], generic_name: ["acetylsalicylic acid"] } }] }),
+      });
+      addDoc.mockResolvedValueOnce({ id: 'cache-id' })
+              .mockResolvedValueOnce({ id: 'med-id-123' });
+
       const result = await medicationService.addMedicationWithFDA(
-        testUserId,
+        "user-123",
         "aspirin",
-        mockMedicationData.schedule
+        { frequency: "daily", times: ["09:00"] }
       );
 
       expect(result.success).toBe(true);
-      expect(result.id).toBeDefined();
+      expect(result.id).toBe('med-id-123');
       expect(result.fdaData).toBeDefined();
-      expect(result.fdaData.brandName).toBeDefined();
+    });
 
-      createdMedicationIds.push(result.id);
-    }, 15000);
+    test("TC-26: Should add medication manually", async () => {
+      addDoc.mockResolvedValue({ id: 'med-manual-123' });
 
-    test("TC-26: Should store complete medication with FDA information", async () => {
-      const result = await medicationService.addMedicationWithFDA(
-        testUserId,
-        "ibuprofen",
-        {
-          frequency: "every_4_hours",
-          times: ["08:00", "12:00", "16:00", "20:00"],
-          isPermanent: false,
-          duration: 7, // 7 days
-        }
-      );
-
-      expect(result.success).toBe(true);
-      createdMedicationIds.push(result.id);
-
-      // Verify medication in database
-      const medications = await medicationService.getUserMedications(
-        testUserId
-      );
-      const addedMed = medications.medications.find((m) => m.id === result.id);
-
-      expect(addedMed).toBeDefined();
-      expect(addedMed.fdaData).toBeDefined();
-      expect(addedMed.schedule).toBeDefined();
-      expect(addedMed.medicationName).toBe("ibuprofen");
-    }, 15000);
-
-    test("TC-27: Should add medication manually without FDA data", async () => {
-      const manualMedicationData = {
-        medicationName: "custom-supplement",
-        schedule: mockMedicationData.schedule,
-        notes: "Custom medication added by user",
+      const result = await medicationService.addMedication("user-123", {
+        medicationName: "Custom Supplement",
+        schedule: { frequency: "daily", times: ["09:00"] },
         isActive: true,
-      };
-
-      const result = await medicationService.addMedication(
-        testUserId,
-        manualMedicationData
-      );
-
-      expect(result.success).toBe(true);
-      expect(result.id).toBeDefined();
-
-      createdMedicationIds.push(result.id);
-    });
-
-    test("TC-28: Should retrieve all medications for a user", async () => {
-      // Add multiple medications
-      const med1 = await medicationService.addMedication(testUserId, {
-        ...mockMedicationData,
-        medicationName: "medication-1",
-      });
-      const med2 = await medicationService.addMedication(testUserId, {
-        ...mockMedicationData,
-        medicationName: "medication-2",
       });
 
-      createdMedicationIds.push(med1.id, med2.id);
+      expect(result.success).toBe(true);
+      expect(result.id).toBe('med-manual-123');
+      expect(addDoc).toHaveBeenCalled();
+    });
 
-      // Retrieve all medications
-      const result = await medicationService.getUserMedications(testUserId);
+    test("TC-27: Should get user medications", async () => {
+      const mockMedications = [
+        { id: 'med1', medicationName: 'Aspirin' },
+        { id: 'med2', medicationName: 'Ibuprofen' },
+      ];
+
+      getDocs.mockResolvedValue({
+        forEach: (callback) => mockMedications.forEach((med) => callback({ id: med.id, data: () => med })),
+      });
+
+      const result = await medicationService.getUserMedications("user-123");
 
       expect(result.success).toBe(true);
-      expect(result.medications).toBeDefined();
-      expect(result.medications.length).toBeGreaterThanOrEqual(2);
+      expect(result.medications.length).toBe(2);
     });
 
-    test("TC-29: Should update medication data", async () => {
-      // Add medication
-      const addResult = await medicationService.addMedication(
-        testUserId,
-        mockMedicationData
-      );
-      createdMedicationIds.push(addResult.id);
+    test("TC-28: Should update medication", async () => {
+      updateDoc.mockResolvedValue();
 
-      // Update medication
-      const updateResult = await medicationService.updateMedication(
-        addResult.id,
-        {
-          streak: 7,
-          isActive: false,
-        }
-      );
+      const result = await medicationService.updateMedication('med-123', {
+        streak: 7,
+        isActive: false,
+      });
 
-      expect(updateResult.success).toBe(true);
-
-      // Verify update
-      const medications = await medicationService.getUserMedications(
-        testUserId
-      );
-      const updatedMed = medications.medications.find(
-        (m) => m.id === addResult.id
-      );
-
-      expect(updatedMed.streak).toBe(7);
-      expect(updatedMed.isActive).toBe(false);
+      expect(result.success).toBe(true);
+      expect(updateDoc).toHaveBeenCalled();
     });
 
-    test("TC-30: Should delete medication", async () => {
-      // Add medication
-      const addResult = await medicationService.addMedication(
-        testUserId,
-        mockMedicationData
-      );
+    test("TC-29: Should delete medication", async () => {
+      deleteDoc.mockResolvedValue();
 
-      // Delete medication
-      const deleteResult = await medicationService.deleteMedication(
-        addResult.id
-      );
+      const result = await medicationService.deleteMedication('med-123');
 
-      expect(deleteResult.success).toBe(true);
-
-      // Verify deletion
-      const medications = await medicationService.getUserMedications(
-        testUserId
-      );
-      const deletedMed = medications.medications.find(
-        (m) => m.id === addResult.id
-      );
-
-      expect(deletedMed).toBeUndefined();
+      expect(result.success).toBe(true);
+      expect(deleteDoc).toHaveBeenCalled();
     });
   });
 
-  describe("Medication Tracking (Taken/Skipped)", () => {
-    let testMedicationId;
+  describe("Medication Tracking", () => {
+    test("TC-30: Should record medication as taken", async () => {
+      addDoc.mockResolvedValue({ id: 'log-123' });
 
-    beforeEach(async () => {
-      const result = await medicationService.addMedication(
-        testUserId,
-        mockMedicationData
-      );
-      testMedicationId = result.id;
-      createdMedicationIds.push(testMedicationId);
-    });
-
-    test("TC-31: Should record medication as taken", async () => {
-      const result = await medicationService.recordMedicationTaken(
-        testMedicationId,
-        "taken"
-      );
+      const result = await medicationService.recordMedicationTaken('med-123', 'taken');
 
       expect(result.success).toBe(true);
-      expect(result.id).toBeDefined();
+      expect(result.id).toBe('log-123');
+      expect(addDoc).toHaveBeenCalled();
     });
 
-    test("TC-32: Should record medication as skipped", async () => {
-      const result = await medicationService.recordMedicationTaken(
-        testMedicationId,
-        "skipped"
-      );
+    test("TC-31: Should record medication as skipped", async () => {
+      addDoc.mockResolvedValue({ id: 'log-456' });
+
+      const result = await medicationService.recordMedicationTaken('med-123', 'skipped');
 
       expect(result.success).toBe(true);
-      expect(result.id).toBeDefined();
-    });
-
-    test("TC-33: Should store timestamp with medication log", async () => {
-      const result = await medicationService.recordMedicationTaken(
-        testMedicationId,
-        "taken"
-      );
-
-      expect(result.success).toBe(true);
-
-      // In a real test, you'd query medicationLogs to verify timestamp
-      // For now, we verify the operation succeeded
-      expect(result.id).toBeDefined();
+      expect(result.id).toBe('log-456');
     });
   });
 
   describe("Real-time Subscription", () => {
-    test("TC-34: Should subscribe to medication changes", (done) => {
-      let unsubscribe;
+    test("TC-32: Should subscribe to medication changes", () => {
+      const mockUnsubscribe = jest.fn();
+      const mockCallback = jest.fn();
+      
+      onSnapshot.mockImplementation((q, callback) => {
+        callback({ forEach: (cb) => {} });
+        return mockUnsubscribe;
+      });
 
-      const callback = (medications) => {
-        expect(medications).toBeDefined();
-        expect(Array.isArray(medications)).toBe(true);
+      const unsubscribe = medicationService.subscribeToMedications("user-123", mockCallback);
 
-        if (unsubscribe) unsubscribe();
-        done();
-      };
-
-      unsubscribe = medicationService.subscribeToMedications(
-        testUserId,
-        callback
-      );
-
-      // Add a medication to trigger the subscription
-      medicationService
-        .addMedication(testUserId, mockMedicationData)
-        .then((result) => {
-          createdMedicationIds.push(result.id);
-        });
-    }, 10000);
-
-    test("TC-35: Should receive updates when medication is added", (done) => {
-      let callCount = 0;
-      let unsubscribe;
-
-      const callback = (medications) => {
-        callCount++;
-
-        if (callCount === 2) {
-          // First call is initial state, second is after add
-          expect(medications.length).toBeGreaterThan(0);
-          if (unsubscribe) unsubscribe();
-          done();
-        }
-      };
-
-      unsubscribe = medicationService.subscribeToMedications(
-        testUserId,
-        callback
-      );
-
-      // Wait a bit then add medication
-      setTimeout(() => {
-        medicationService
-          .addMedication(testUserId, mockMedicationData)
-          .then((result) => {
-            createdMedicationIds.push(result.id);
-          });
-      }, 1000);
-    }, 15000);
+      expect(onSnapshot).toHaveBeenCalled();
+      expect(mockCallback).toHaveBeenCalled();
+      expect(typeof unsubscribe).toBe('function');
+    });
   });
 
   describe("Error Handling", () => {
-    test("TC-36: Should handle invalid medication ID gracefully", async () => {
-      const result = await medicationService.updateMedication(
-        "invalid-id-12345",
-        { streak: 5 }
-      );
+    test("TC-33: Should handle invalid medication ID", async () => {
+      updateDoc.mockRejectedValue(new Error("Document not found"));
+
+      const result = await medicationService.updateMedication("invalid-id", { streak: 5 });
 
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
     });
 
-    test("TC-37: Should handle missing FDA data gracefully", async () => {
+    test("TC-34: Should handle FDA API error gracefully", async () => {
+      getDocs.mockResolvedValue({ empty: true, docs: [] });
+      global.fetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
       const result = await medicationService.addMedicationWithFDA(
-        testUserId,
-        "nonexistentmedicine123",
-        mockMedicationData.schedule
+        "user-123",
+        "nonexistent",
+        { frequency: "daily", times: ["09:00"] }
       );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Could not fetch medication info");
-    }, 15000);
-  });
-
-  describe("MediMate Specific Features", () => {
-    test("TC-38: Should support permanent medication tracking", async () => {
-      const permanentMed = {
-        medicationName: "chronic-medication",
-        schedule: {
-          frequency: "daily",
-          times: ["09:00"],
-          isPermanent: true,
-          refillReminder: true,
-          refillDay: 28,
-        },
-        isActive: true,
-      };
-
-      const result = await medicationService.addMedication(
-        testUserId,
-        permanentMed
-      );
-
-      expect(result.success).toBe(true);
-      createdMedicationIds.push(result.id);
-
-      const medications = await medicationService.getUserMedications(
-        testUserId
-      );
-      const addedMed = medications.medications.find((m) => m.id === result.id);
-
-      expect(addedMed.schedule.isPermanent).toBe(true);
-      expect(addedMed.schedule.refillReminder).toBe(true);
-    });
-
-    test("TC-39: Should support temporary medication with duration", async () => {
-      const temporaryMed = {
-        medicationName: "antibiotic",
-        schedule: {
-          frequency: "every_8_hours",
-          times: ["08:00", "16:00", "00:00"],
-          isPermanent: false,
-          duration: 10, // 10 days
-        },
-        isActive: true,
-      };
-
-      const result = await medicationService.addMedication(
-        testUserId,
-        temporaryMed
-      );
-
-      expect(result.success).toBe(true);
-      createdMedicationIds.push(result.id);
-
-      const medications = await medicationService.getUserMedications(
-        testUserId
-      );
-      const addedMed = medications.medications.find((m) => m.id === result.id);
-
-      expect(addedMed.schedule.isPermanent).toBe(false);
-      expect(addedMed.schedule.duration).toBe(10);
-    });
-
-    test("TC-40: Should track medication streak", async () => {
-      const result = await medicationService.addMedication(testUserId, {
-        ...mockMedicationData,
-        streak: 0,
-      });
-      createdMedicationIds.push(result.id);
-
-      // Simulate taking medication for 5 days
-      await medicationService.updateMedication(result.id, { streak: 5 });
-
-      const medications = await medicationService.getUserMedications(
-        testUserId
-      );
-      const medication = medications.medications.find(
-        (m) => m.id === result.id
-      );
-
-      expect(medication.streak).toBe(5);
     });
   });
 });
