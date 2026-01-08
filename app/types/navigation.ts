@@ -25,8 +25,26 @@ export type HomeStackParamList = {
 export type PrescriptionsStackParamList = {
   PrescriptionsMain: undefined;
   MedicationSearch: undefined;
-  // Add more prescription-related screens here
-  // Example: AddPrescription: undefined;
+  MedicationDetail: {
+    medicationName: string;
+    brandName: string;
+    genericName?: string;
+  };
+  MedicationSchedule: {
+    medicationName: string;
+    brandName: string;
+    genericName?: string;
+    fdaData?: any;
+    existingMedication?: any;
+  };
+  MedicationConfirm: {
+    medicationName: string;
+    brandName: string;
+    genericName?: string;
+    fdaData: any;
+    scheduleData: any;
+    existingMedicationId?: string;
+  };
 };
 
 // Profile Stack - nested screens from Profile tab
