@@ -21,6 +21,7 @@ import type {
     ProfileStackParamList,
     RootStackParamList,
 } from '../types/navigation';
+import MedicationSearchScreen from '../screens/prescriptions/MedicationSearchScreen';
 
 // Create navigators
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -53,7 +54,8 @@ function HomeNavigator() {
 function PrescriptionsNavigator() {
   return (
     <PrescriptionsStack.Navigator screenOptions={{ headerShown: false }}>
-      <PrescriptionsStack.Screen name="PrescriptionsMain" component={PrescriptionsScreen} />
+    <PrescriptionsStack.Screen name="PrescriptionsMain" component={PrescriptionsScreen}/>
+    <PrescriptionsStack.Screen name="MedicationSearch" component={MedicationSearchScreen} />
       {/* Add more prescription-related screens here */}
     </PrescriptionsStack.Navigator>
   );
