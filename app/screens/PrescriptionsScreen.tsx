@@ -23,7 +23,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { medicationService } from "../services/medicationService";
 import type { PrescriptionsStackParamList } from "../types/navigation";
 
-// Icons (you can replace these with actual icon components later)
+// Icons (replace these with actual icon components later)
 const PlusIcon = () => <Text style={styles.icon}>+</Text>;
 const ChevronRightIcon = () => <Text style={styles.chevron}>›</Text>;
 const CalendarIcon = () => <Text style={styles.iconEmoji}>📅</Text>;
