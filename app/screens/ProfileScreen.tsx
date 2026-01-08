@@ -52,6 +52,9 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
+        {/* Page Header */}
+        <Text style={styles.pageTitle}>Your Profile</Text>
+
         <View style={styles.header}>
           <Text style={styles.name}>{user?.displayName || 'User'}</Text>
           <Text style={styles.email}>{user?.email}</Text>
@@ -106,6 +109,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  pageTitle: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#1E40AF',
+    marginBottom: 24,
+  },
   header: {
     alignItems: 'center',
     paddingVertical: 32,
@@ -114,9 +123,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   name: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#1E40AF',
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#1e293b',
     marginBottom: 4,
   },
   email: {
