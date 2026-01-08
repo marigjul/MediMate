@@ -46,7 +46,6 @@ export default function MedicationConfirmScreen() {
 
   const formatTimes = () => {
     if (scheduleData.schedule.type === "interval") {
-      // Show the calculated times for interval schedules
       return scheduleData.schedule.times?.join(", ") || "";
     } else {
       return scheduleData.schedule.times?.join(", ") || "";
@@ -73,32 +72,36 @@ export default function MedicationConfirmScreen() {
       setSaving(true);
 
       if (isEditMode) {
-        // Update existing medication
+        const updateData: any = {
+          dosage: scheduleData.dosage,
+          schedule: scheduleData.schedule,
+          duration: {
+            type: scheduleData.duration.type,
+          },
+        };
+
+        if (scheduleData.duration.days) {
+          updateData.duration.days = scheduleData.duration.days;
+        }
+
+        if (scheduleData.refillReminder) {
+          updateData.refillReminder = scheduleData.refillReminder;
+        }
+
         const result = await medicationService.updateMedication(
           existingMedicationId,
-          {
-            dosage: scheduleData.dosage,
-            schedule: scheduleData.schedule,
-            duration: scheduleData.duration,
-            refillReminder: scheduleData.refillReminder,
-          }
+          updateData
         );
 
         if (result.success) {
-          // Navigate back immediately
           navigation.navigate("PrescriptionsMain");
         } else {
           throw new Error(result.error || "Failed to update medication");
         }
       } else {
-        // Add new medication
-        // First check if medication is already in cache
-        const cacheResult = await medicationService.searchMedicationFromFDA(
-          medicationName
-        );
+        await medicationService.searchMedicationFromFDA(medicationName);
 
-        // Then add the medication with schedule
-        const result = await medicationService.addMedicationWithFDA(
+        const addResult = await medicationService.addMedicationWithFDA(
           user.uid,
           medicationName,
           {
@@ -111,23 +114,57 @@ export default function MedicationConfirmScreen() {
           }
         );
 
-        if (result.success) {
-          // Also update with dosage and full schedule info
-          const updateResult = await medicationService.updateMedication(result.id, {
+        if (addResult.success) {
+          const updateData: any = {
             dosage: scheduleData.dosage,
-            schedule: scheduleData.schedule,
-            duration: scheduleData.duration,
-            refillReminder: scheduleData.refillReminder,
-          });
+            schedule: {
+              times: scheduleData.schedule.times,
+              frequency: scheduleData.schedule.frequency,
+            },
+            duration: {
+              type: scheduleData.duration.type,
+            },
+          };
 
-          // Navigate back immediately
-          navigation.navigate("PrescriptionsMain");
+          if (scheduleData.schedule.type) {
+            updateData.schedule.type = scheduleData.schedule.type;
+          }
+          if (scheduleData.schedule.startTime) {
+            updateData.schedule.startTime = scheduleData.schedule.startTime;
+          }
+          if (scheduleData.schedule.dosesPerDay) {
+            updateData.schedule.dosesPerDay = scheduleData.schedule.dosesPerDay;
+          }
+          if (scheduleData.schedule.hoursBetweenDoses) {
+            updateData.schedule.hoursBetweenDoses =
+              scheduleData.schedule.hoursBetweenDoses;
+          }
+
+          if (scheduleData.duration.days) {
+            updateData.duration.days = scheduleData.duration.days;
+          }
+
+          if (scheduleData.refillReminder) {
+            updateData.refillReminder = scheduleData.refillReminder;
+          }
+
+          const updateResult = await medicationService.updateMedication(
+            addResult.id,
+            updateData
+          );
+
+          if (updateResult.success) {
+            navigation.navigate("PrescriptionsMain");
+          } else {
+            throw new Error(
+              updateResult.error || "Failed to update medication details"
+            );
+          }
         } else {
-          throw new Error(result.error || "Failed to add medication");
+          throw new Error(addResult.error || "Failed to add medication");
         }
       }
     } catch (error) {
-      console.error("Error saving medication:", error);
       setError(
         error instanceof Error ? error.message : "Failed to save medication"
       );

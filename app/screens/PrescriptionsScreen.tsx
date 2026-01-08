@@ -41,12 +41,11 @@ interface Medication {
   schedule: {
     times?: string[];
     frequency: string;
-    duration?:
-      | string
-      | {
-          type: "permanent" | "limited";
-          days?: number;
-        };
+    duration?: string;
+  };
+  duration?: {
+    type: "permanent" | "limited";
+    days?: number;
   };
   streak?: number;
   fdaData?: {
@@ -64,7 +63,6 @@ export default function PrescriptionsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load medications when component mounts or user changes
   useEffect(() => {
     if (user) {
       loadMedications();
@@ -74,7 +72,6 @@ export default function PrescriptionsScreen() {
     }
   }, [user]);
 
-  // Reload medications when screen comes back into focus (after adding/editing)
   useFocusEffect(
     useCallback(() => {
       if (user) {
@@ -117,7 +114,6 @@ export default function PrescriptionsScreen() {
 
   const handleMedicationPress = (medication: Medication) => {
     // TODO: Navigate to medication detail screen
-    console.log("Medication pressed:", medication.id);
   };
 
   const formatSchedule = (medication: Medication) => {
@@ -131,37 +127,40 @@ export default function PrescriptionsScreen() {
 
     if (times.length === 1) {
       return `${schedule.frequency} at ${startTime}`;
+    } else if (times.length === 2) {
+      return `${schedule.frequency} at ${times.join(" and ")}`;
     } else {
       return `${schedule.frequency} from ${startTime} to ${endTime}`;
     }
   };
 
-  const formatDuration = (medication: Medication) => {
-    const duration = medication.schedule.duration;
-
-    // Handle undefined duration
-    if (!duration) {
-      return null;
+  const isPermanentMedication = (medication: Medication): boolean => {
+    if (medication.duration) {
+      return medication.duration.type === "permanent";
     }
+    if (medication.schedule.duration) {
+      return medication.schedule.duration === "permanent";
+    }
+    return false;
+  };
 
-    // Handle new object format { type: "permanent" | "limited", days?: number }
-    if (typeof duration === "object") {
-      if (duration.type === "permanent") {
+  const formatDuration = (medication: Medication) => {
+    if (medication.duration) {
+      if (medication.duration.type === "permanent") {
         return null;
       }
-      if (duration.type === "limited" && duration.days) {
+      if (medication.duration.type === "limited" && medication.duration.days) {
         const currentDay = medication.streak || 0;
-        return `${currentDay}/${duration.days} days`;
+        return `${currentDay}/${medication.duration.days} days`;
       }
       return null;
     }
 
-    // Handle old string format "permanent" or "14 days"
-    if (duration === "permanent") {
+    const duration = medication.schedule.duration;
+    if (!duration || duration === "permanent") {
       return null;
     }
 
-    // Parse duration like "14 days" and calculate progress
     const match = duration.match(/(\d+)\s*days?/);
     if (match) {
       const totalDays = parseInt(match[1]);
@@ -178,14 +177,8 @@ export default function PrescriptionsScreen() {
       medication.medicationName.charAt(0).toUpperCase() +
         medication.medicationName.slice(1);
 
-    const isPermanent =
-      typeof medication.schedule.duration === "object"
-        ? medication.schedule.duration.type === "permanent"
-        : medication.schedule.duration === "permanent";
-
+    const isPermanent = isPermanentMedication(medication);
     const durationText = formatDuration(medication);
-    // Show streak for permanent meds (including when it's 0), show days for time-limited
-    const shouldShowContent = isPermanent || durationText;
 
     return (
       <TouchableOpacity
@@ -199,58 +192,54 @@ export default function PrescriptionsScreen() {
             <CardDescription>{formatSchedule(medication)}</CardDescription>
           </CardHeader>
 
-          {shouldShowContent && (
-            <CardContent>
-              {/* First row: streak/duration and type badge */}
-              <View style={styles.cardContentRow}>
-                {/* Show day progress for time-limited medications */}
-                {!isPermanent && durationText && (
-                  <View style={styles.infoItem}>
-                    <MaterialCommunityIcons
-                      name="calendar-clock"
-                      size={18}
-                      color="#3B82F6"
-                    />
-                    <Text style={styles.infoText}>{durationText}</Text>
-                  </View>
-                )}
-
-                {/* Show streak for permanent medications (even if 0) */}
-                {isPermanent && (
-                  <View style={styles.infoItem}>
-                    <MaterialCommunityIcons
-                      name="fire"
-                      size={18}
-                      color="#10B981"
-                    />
-                    <Text style={styles.streakText}>
-                      {medication.streak || 0}-day streak
-                    </Text>
-                  </View>
-                )}
-
-                {/* Type badge on the right side */}
-                <View style={styles.typeBadge}>
+          <CardContent>
+            <View style={styles.cardContentRow}>
+              {!isPermanent && durationText && (
+                <View style={styles.infoItem}>
                   <MaterialCommunityIcons
-                    name={isPermanent ? "infinity" : "clock-outline"}
-                    size={14}
-                    color="#9CA3AF"
+                    name="calendar-clock"
+                    size={18}
+                    color="#3B82F6"
                   />
-                  <Text style={styles.typeText}>
-                    {isPermanent ? "Permanent" : "Time-limited"}
-                  </Text>
+                  <Text style={styles.infoText}>{durationText}</Text>
                 </View>
-              </View>
+              )}
 
-              {/* Second row: refill reminder if exists */}
-              {medication.refillReminder && (
-                <View style={styles.refillRow}>
-                  <Text style={styles.refillText}>
-                    Refill reminder: Every {medication.refillReminder} days
+              {isPermanent && (
+                <View style={styles.infoItem}>
+                  <MaterialCommunityIcons
+                    name="fire"
+                    size={18}
+                    color="#10B981"
+                  />
+                  <Text style={styles.streakText}>
+                    {medication.streak || 0}-day streak
                   </Text>
                 </View>
               )}
-            </CardContent>
+
+              <View style={styles.typeBadge}>
+                <MaterialCommunityIcons
+                  name={isPermanent ? "infinity" : "clock-outline"}
+                  size={14}
+                  color="#9CA3AF"
+                />
+                <Text style={styles.typeText}>
+                  {isPermanent ? "Permanent" : "Time-limited"}
+                </Text>
+              </View>
+            </View>
+          </CardContent>
+
+          {isPermanent && medication.refillReminder && (
+            <>
+              <View style={styles.divider} />
+              <CardFooter>
+                <Text style={styles.refillText}>
+                  Refill reminder: Every {medication.refillReminder} days
+                </Text>
+              </CardFooter>
+            </>
           )}
 
           <CardAction>
@@ -277,12 +266,10 @@ export default function PrescriptionsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Prescriptions</Text>
         </View>
 
-        {/* Add Medication Button */}
         <Button
           variant="default"
           size="default"
@@ -294,7 +281,6 @@ export default function PrescriptionsScreen() {
           Add Medication
         </Button>
 
-        {/* Error Message */}
         {error && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>❌ {error}</Text>
@@ -307,7 +293,6 @@ export default function PrescriptionsScreen() {
           </View>
         )}
 
-        {/* Medications List */}
         <View style={styles.medicationsList}>
           {medications.length > 0 ? (
             medications.map(renderMedicationCard)
@@ -363,10 +348,10 @@ const styles = StyleSheet.create({
     color: "#1E40AF",
   },
   addButton: {
-    marginBottom: 24,
+    marginBottom: 18,
   },
   medicationsList: {
-    gap: 16,
+    gap: 12,
   },
   medicationCard: {
     marginBottom: 0,
@@ -394,14 +379,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     lineHeight: 18,
   },
-  refillRow: {
-    marginTop: 12,
-  },
-  footerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
   typeBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -415,6 +392,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: "#6B7280",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#E5E7EB",
+    marginHorizontal: 24,
   },
   refillText: {
     fontSize: 13,
@@ -450,10 +432,6 @@ const styles = StyleSheet.create({
     padding: 60,
     alignItems: "center",
     justifyContent: "center",
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
   },
   emptyStateTitle: {
     fontSize: 20,
