@@ -222,12 +222,12 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#E0F2FE',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
   },
   header: {
     alignItems: 'center',
@@ -235,8 +235,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#2563EB',
+    fontWeight: '700',
+    color: '#1E40AF',
     marginBottom: 8,
   },
   subtitle: {
