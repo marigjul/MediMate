@@ -18,12 +18,12 @@ import EditProfileScreen from '../screens/profile/EditProfileScreen';
 
 // Import types
 import type {
-    AuthStackParamList,
-    HomeStackParamList,
-    MainTabParamList,
-    PrescriptionsStackParamList,
-    ProfileStackParamList,
-    RootStackParamList,
+  AuthStackParamList,
+  HomeStackParamList,
+  MainTabParamList,
+  PrescriptionsStackParamList,
+  ProfileStackParamList,
+  RootStackParamList,
 } from '../types/navigation';
 
 // Create navigators
@@ -124,7 +124,7 @@ export function RootNavigator() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color="#1E40AF" />
       </View>
     );
   }
@@ -147,6 +147,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#E0F2FE',
   },
 });

@@ -15,6 +15,9 @@ const AuthContext = createContext<AuthContextType>({
   refreshUser: async () => {},
 });
 
+// Export for testing
+export { AuthContext };
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
