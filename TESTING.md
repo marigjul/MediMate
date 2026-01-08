@@ -66,6 +66,35 @@ npm test medicationService    # Medication service tests
 npm test -- --coverage
 ```
 
+This generates a detailed code coverage report showing:
+- **Statement coverage**: Percentage of code statements executed
+- **Branch coverage**: Percentage of conditional branches tested
+- **Function coverage**: Percentage of functions called
+- **Line coverage**: Percentage of code lines executed
+
+**Coverage Report Location:**
+- Terminal output shows summary table
+- `coverage/lcov-report/index.html` - Open this in a browser for an interactive HTML report
+- `coverage/coverage-final.json` - Raw coverage data
+- `coverage/lcov.info` - LCOV format for CI tools
+
+**Viewing the HTML Report:**
+```bash
+open coverage/lcov-report/index.html
+```
+
+The HTML report provides:
+- File-by-file coverage breakdown
+- Line-by-line highlighting of covered (green) vs uncovered (red) code
+- Click through to see exactly which parts of your code are tested
+
+**Current Coverage:**
+- Overall: ~70%
+- authService: 91.83%
+- medicationService: 62.63%
+- ProfileScreen: 72%
+- EditProfileScreen: 78.94%
+
 ### Watch Mode
 ```bash
 npm test -- --watch
