@@ -68,6 +68,9 @@ export default function MedicationScheduleScreen() {
   const [durationDays, setDurationDays] = useState(
     existingMedication?.duration?.days?.toString() || ""
   );
+  const [refillReminderDays, setRefillReminderDays] = useState(
+    existingMedication?.refillReminder?.toString() || ""
+  );
 
   // Error state
   const [error, setError] = useState("");
@@ -191,13 +194,17 @@ export default function MedicationScheduleScreen() {
           scheduleType === "interval" ? parseInt(dosesPerDay) : undefined,
         hoursBetweenDoses:
           scheduleType === "interval" ? parseInt(hoursBetweenDoses) : undefined,
-        times: scheduleType === "specific_times" ? times : calculatedTimes,
+        times: (scheduleType === "specific_times" ? times : calculatedTimes) || [],
         frequency,
       },
       duration: {
         type: durationType,
         days: durationType === "limited" ? parseInt(durationDays) : undefined,
       },
+      refillReminder:
+        durationType === "permanent" && refillReminderDays
+          ? parseInt(refillReminderDays)
+          : undefined,
     };
 
     navigation.navigate("MedicationConfirm", {
@@ -373,7 +380,7 @@ export default function MedicationScheduleScreen() {
 
         {/* Duration Type */}
         <View style={styles.formSection}>
-          <Text style={styles.label}>Duration *</Text>
+          <Text style={styles.label}>Medication Duration *</Text>
           <View style={styles.toggleContainer}>
             <TouchableOpacity
               style={[
@@ -388,7 +395,7 @@ export default function MedicationScheduleScreen() {
                   durationType === "permanent" && styles.toggleTextActive,
                 ]}
               >
-                Ongoing
+                Permanent
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -404,7 +411,7 @@ export default function MedicationScheduleScreen() {
                   durationType === "limited" && styles.toggleTextActive,
                 ]}
               >
-                Limited Time
+                Time-limited course
               </Text>
             </TouchableOpacity>
           </View>
@@ -419,6 +426,24 @@ export default function MedicationScheduleScreen() {
               value={durationDays}
               onChangeText={setDurationDays}
               placeholder="14"
+              keyboardType="number-pad"
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
+        )}
+
+        {/* Refill Reminder - only for permanent medications */}
+        {durationType === "permanent" && (
+          <View style={styles.formSection}>
+            <Text style={styles.label}>Refill Reminder (days)</Text>
+            <Text style={styles.helperText}>
+              Optional: Get reminded to refill every X days
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={refillReminderDays}
+              onChangeText={setRefillReminderDays}
+              placeholder="30"
               keyboardType="number-pad"
               placeholderTextColor="#9CA3AF"
             />

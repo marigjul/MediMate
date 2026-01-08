@@ -42,7 +42,22 @@ export type PrescriptionsStackParamList = {
     brandName: string;
     genericName?: string;
     fdaData: any;
-    scheduleData: any;
+    scheduleData: {
+      dosage: string;
+      schedule: {
+        type?: 'interval' | 'specific_times';
+        startTime?: string;
+        dosesPerDay?: number;
+        hoursBetweenDoses?: number;
+        times: string[];
+        frequency: string;
+      };
+      duration: {
+        type: 'permanent' | 'limited';
+        days?: number;
+      };
+      refillReminder?: number;
+    };
     existingMedicationId?: string;
   };
 };

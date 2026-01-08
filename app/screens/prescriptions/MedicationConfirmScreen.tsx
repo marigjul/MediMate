@@ -80,6 +80,7 @@ export default function MedicationConfirmScreen() {
             dosage: scheduleData.dosage,
             schedule: scheduleData.schedule,
             duration: scheduleData.duration,
+            refillReminder: scheduleData.refillReminder,
           }
         );
 
@@ -112,10 +113,11 @@ export default function MedicationConfirmScreen() {
 
         if (result.success) {
           // Also update with dosage and full schedule info
-          await medicationService.updateMedication(result.id, {
+          const updateResult = await medicationService.updateMedication(result.id, {
             dosage: scheduleData.dosage,
             schedule: scheduleData.schedule,
             duration: scheduleData.duration,
+            refillReminder: scheduleData.refillReminder,
           });
 
           // Navigate back immediately
@@ -198,6 +200,16 @@ export default function MedicationConfirmScreen() {
             <Text style={styles.summaryLabel}>Duration</Text>
             <Text style={styles.summaryValue}>{formatDuration()}</Text>
           </View>
+
+          {/* Refill Reminder - only show if set */}
+          {scheduleData.refillReminder && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Refill Reminder</Text>
+              <Text style={styles.summaryValue}>
+                Every {scheduleData.refillReminder} days
+              </Text>
+            </View>
+          )}
 
           {/* Edit Button */}
           <TouchableOpacity onPress={handleEdit} style={styles.editButton}>

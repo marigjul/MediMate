@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useCallback, useEffect, useState } from "react";
@@ -23,11 +24,11 @@ import { useAuth } from "../contexts/AuthContext";
 import { medicationService } from "../services/medicationService";
 import type { PrescriptionsStackParamList } from "../types/navigation";
 
-// Icons (you can replace these with actual icon components later)
+// Icons
 const PlusIcon = () => <Text style={styles.icon}>+</Text>;
-const ChevronRightIcon = () => <Text style={styles.chevron}>›</Text>;
-const CalendarIcon = () => <Text style={styles.iconEmoji}>📅</Text>;
-const TrendingUpIcon = () => <Text style={styles.iconEmoji}>📈</Text>;
+const ChevronRightIcon = () => (
+  <MaterialCommunityIcons name="chevron-right" size={28} color="#9CA3AF" />
+);
 
 type PrescriptionsScreenNavigationProp = NativeStackNavigationProp<
   PrescriptionsStackParamList,
@@ -150,7 +151,7 @@ export default function PrescriptionsScreen() {
       }
       if (duration.type === "limited" && duration.days) {
         const currentDay = medication.streak || 0;
-        return `${currentDay}/${duration.days}\ndays`;
+        return `${currentDay}/${duration.days} days`;
       }
       return null;
     }
@@ -165,7 +166,7 @@ export default function PrescriptionsScreen() {
     if (match) {
       const totalDays = parseInt(match[1]);
       const currentDay = medication.streak || 0;
-      return `${currentDay}/${totalDays}\ndays`;
+      return `${currentDay}/${totalDays} days`;
     }
 
     return duration;
@@ -177,8 +178,14 @@ export default function PrescriptionsScreen() {
       medication.medicationName.charAt(0).toUpperCase() +
         medication.medicationName.slice(1);
 
+    const isPermanent =
+      typeof medication.schedule.duration === "object"
+        ? medication.schedule.duration.type === "permanent"
+        : medication.schedule.duration === "permanent";
+
     const durationText = formatDuration(medication);
-    const hasStreak = medication.streak && medication.streak > 0;
+    // Show streak for permanent meds (including when it's 0), show days for time-limited
+    const shouldShowContent = isPermanent || durationText;
 
     return (
       <TouchableOpacity
@@ -192,32 +199,58 @@ export default function PrescriptionsScreen() {
             <CardDescription>{formatSchedule(medication)}</CardDescription>
           </CardHeader>
 
-          {(durationText || hasStreak) && (
-            <CardContent style={styles.cardContentRow}>
-              {durationText && (
-                <View style={styles.infoItem}>
-                  <CalendarIcon />
-                  <Text style={styles.infoText}>{durationText}</Text>
-                </View>
-              )}
+          {shouldShowContent && (
+            <CardContent>
+              {/* First row: streak/duration and type badge */}
+              <View style={styles.cardContentRow}>
+                {/* Show day progress for time-limited medications */}
+                {!isPermanent && durationText && (
+                  <View style={styles.infoItem}>
+                    <MaterialCommunityIcons
+                      name="calendar-clock"
+                      size={18}
+                      color="#3B82F6"
+                    />
+                    <Text style={styles.infoText}>{durationText}</Text>
+                  </View>
+                )}
 
-              {hasStreak && (
-                <View style={styles.infoItem}>
-                  <TrendingUpIcon />
-                  <Text style={styles.streakText}>
-                    {medication.streak}-day{"\n"}streak
+                {/* Show streak for permanent medications (even if 0) */}
+                {isPermanent && (
+                  <View style={styles.infoItem}>
+                    <MaterialCommunityIcons
+                      name="fire"
+                      size={18}
+                      color="#10B981"
+                    />
+                    <Text style={styles.streakText}>
+                      {medication.streak || 0}-day streak
+                    </Text>
+                  </View>
+                )}
+
+                {/* Type badge on the right side */}
+                <View style={styles.typeBadge}>
+                  <MaterialCommunityIcons
+                    name={isPermanent ? "infinity" : "clock-outline"}
+                    size={14}
+                    color="#9CA3AF"
+                  />
+                  <Text style={styles.typeText}>
+                    {isPermanent ? "Permanent" : "Time-limited"}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Second row: refill reminder if exists */}
+              {medication.refillReminder && (
+                <View style={styles.refillRow}>
+                  <Text style={styles.refillText}>
+                    Refill reminder: Every {medication.refillReminder} days
                   </Text>
                 </View>
               )}
             </CardContent>
-          )}
-
-          {medication.refillReminder && (
-            <CardFooter>
-              <Text style={styles.refillText}>
-                Refill reminder: Every {medication.refillReminder} days
-              </Text>
-            </CardFooter>
           )}
 
           <CardAction>
@@ -340,7 +373,9 @@ const styles = StyleSheet.create({
   },
   cardContentRow: {
     flexDirection: "row",
-    gap: 24,
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
   },
   infoItem: {
     flexDirection: "row",
@@ -359,8 +394,30 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     lineHeight: 18,
   },
+  refillRow: {
+    marginTop: 12,
+  },
+  footerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  typeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: "#F3F4F6",
+  },
+  typeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
   refillText: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#6B7280",
   },
   errorContainer: {
@@ -414,13 +471,5 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#FFFFFF",
     fontWeight: "600",
-  },
-  chevron: {
-    fontSize: 28,
-    color: "#9CA3AF",
-    fontWeight: "300",
-  },
-  iconEmoji: {
-    fontSize: 18,
   },
 });
