@@ -1,15 +1,15 @@
 import {
-  collection,
   addDoc,
-  updateDoc,
+  collection,
   deleteDoc,
   doc,
-  query,
-  where,
   getDocs,
   onSnapshot,
+  query,
   serverTimestamp,
   Timestamp,
+  updateDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
@@ -17,7 +17,64 @@ const FDA_API_URL = "https://api.fda.gov/drug/label.json";
 const CACHE_DURATION_DAYS = 30;
 
 export const medicationService = {
-  // Search for medication in OpenFDA API with caching
+  // Search for multiple medication suggestions (for search screen)
+  searchMedicationSuggestions: async (searchTerm) => {
+    try {
+      if (!searchTerm || searchTerm.trim().length < 2) {
+        return { success: false, error: "Search term too short" };
+      }
+
+      console.log("Searching FDA for suggestions:", searchTerm);
+
+      const cleanTerm = searchTerm.trim().toLowerCase();
+
+      // Search both brand_name and generic_name
+      const searchQuery = `(openfda.brand_name:*${cleanTerm}* OR openfda.generic_name:*${cleanTerm}*)`;
+      const encodedQuery = encodeURIComponent(searchQuery);
+
+      console.log("FDA Query:", searchQuery);
+
+      const response = await fetch(
+        `${FDA_API_URL}?search=${encodedQuery}&limit=20`
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log("No results found for:", cleanTerm);
+          return { success: true, data: [] };
+        }
+        throw new Error(`FDA API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("FDA API returned:", data.results?.length || 0, "results");
+
+      if (!data.results || data.results.length === 0) {
+        return { success: true, data: [] };
+      }
+
+      // Transform to simpler format for search results
+      const suggestions = data.results.map((result) => ({
+        brandName: result.openfda?.brand_name?.[0] || "Unknown Brand",
+        genericName: result.openfda?.generic_name?.[0] || "",
+        manufacturer: result.openfda?.manufacturer_name?.[0] || "",
+      }));
+
+      // Remove duplicates based on brand name
+      const uniqueSuggestions = suggestions.filter(
+        (med, index, self) =>
+          index === self.findIndex((m) => m.brandName === med.brandName)
+      );
+
+      console.log("Returning", uniqueSuggestions.length, "unique suggestions");
+      return { success: true, data: uniqueSuggestions };
+    } catch (error) {
+      console.error("Medication search error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Search for specific medication with full details and caching
   searchMedicationFromFDA: async (medicationName) => {
     try {
       // Step 1: Check if medication already exists in cache
