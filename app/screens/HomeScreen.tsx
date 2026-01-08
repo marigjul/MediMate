@@ -252,16 +252,16 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f4f8",
+    backgroundColor: "#E0F2FE",
   },
   content: {
-    padding: 24,
+    padding: 20,
     paddingBottom: 40,
   },
   greeting: {
-    fontSize: 28,
-    fontWeight: "600",
-    color: "#334155",
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#1E40AF",
     marginBottom: 24,
   },
   nextMedCard: {

@@ -13,15 +13,15 @@ import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
 
 // Import types
-import type {
-    AuthStackParamList,
-    HomeStackParamList,
-    MainTabParamList,
-    PrescriptionsStackParamList,
-    ProfileStackParamList,
-    RootStackParamList,
-} from '../types/navigation';
 import MedicationSearchScreen from '../screens/prescriptions/MedicationSearchScreen';
+import type {
+  AuthStackParamList,
+  HomeStackParamList,
+  MainTabParamList,
+  PrescriptionsStackParamList,
+  ProfileStackParamList,
+  RootStackParamList,
+} from '../types/navigation';
 
 // Create navigators
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -121,7 +121,7 @@ export function RootNavigator() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color="#1E40AF" />
       </View>
     );
   }
@@ -144,6 +144,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#E0F2FE',
   },
 });

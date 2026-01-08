@@ -237,33 +237,33 @@ export default function EditProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#E0F2FE',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
+    backgroundColor: '#E0F2FE',
+    borderBottomWidth: 0,
     borderBottomColor: '#E5E7EB',
   },
   backButton: {
     padding: 8,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#1E40AF',
   },
   headerSpacer: {
     width: 40,
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: 20,
   },
   card: {
     marginTop: 16,

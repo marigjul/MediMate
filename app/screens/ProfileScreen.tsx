@@ -100,11 +100,11 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#E0F2FE",
   },
   container: {
     flex: 1,
-    padding: 16,
+    padding: 20,
   },
   header: {
     alignItems: 'center',
@@ -114,9 +114,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#1E40AF',
     marginBottom: 4,
   },
   email: {
