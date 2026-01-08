@@ -125,7 +125,7 @@ export default function PrescriptionsScreen() {
 
   const formatDuration = (medication: Medication) => {
     const duration = medication.schedule.duration;
-    if (duration === "permanent") {
+    if (!duration || duration === "permanent") {
       return null;
     }
 
