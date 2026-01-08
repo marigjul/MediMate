@@ -1,6 +1,6 @@
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -38,9 +38,14 @@ interface Medication {
   id: string;
   medicationName: string;
   schedule: {
-    times: string[];
+    times?: string[];
     frequency: string;
-    duration: string;
+    duration?:
+      | string
+      | {
+          type: "permanent" | "limited";
+          days?: number;
+        };
   };
   streak?: number;
   fdaData?: {
@@ -48,6 +53,7 @@ interface Medication {
     genericName?: string;
   };
   refillReminder?: number;
+  dosage?: string;
 }
 
 export default function PrescriptionsScreen() {
@@ -67,6 +73,15 @@ export default function PrescriptionsScreen() {
     }
   }, [user]);
 
+  // Reload medications when screen comes back into focus (after adding/editing)
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        loadMedications();
+      }
+    }, [user])
+  );
+
   const loadMedications = async () => {
     if (!user) {
       setLoading(false);
@@ -77,12 +92,9 @@ export default function PrescriptionsScreen() {
       setLoading(true);
       setError(null);
 
-      console.log("Loading medications for user:", user.uid);
-
       const result = await medicationService.getUserMedications(user.uid);
 
       if (result.success) {
-        console.log("Medications loaded:", result.medications?.length || 0);
         setMedications(result.medications || []);
       } else {
         console.error("Failed to load medications:", result.error);
@@ -125,6 +137,25 @@ export default function PrescriptionsScreen() {
 
   const formatDuration = (medication: Medication) => {
     const duration = medication.schedule.duration;
+
+    // Handle undefined duration
+    if (!duration) {
+      return null;
+    }
+
+    // Handle new object format { type: "permanent" | "limited", days?: number }
+    if (typeof duration === "object") {
+      if (duration.type === "permanent") {
+        return null;
+      }
+      if (duration.type === "limited" && duration.days) {
+        const currentDay = medication.streak || 0;
+        return `${currentDay}/${duration.days}\ndays`;
+      }
+      return null;
+    }
+
+    // Handle old string format "permanent" or "14 days"
     if (duration === "permanent") {
       return null;
     }
