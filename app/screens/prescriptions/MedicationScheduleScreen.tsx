@@ -1,16 +1,18 @@
 import { Button } from "@/app/components/button";
+import { medicationService } from "@/app/services/medicationService";
 import { PrescriptionsStackParamList } from "@/app/types/navigation";
 import type { RouteProp } from "@react-navigation/native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { deleteField } from "firebase/firestore";
 import React, { useState } from "react";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 
 type MedicationScheduleNavigationProp = NativeStackNavigationProp<
@@ -74,6 +76,7 @@ export default function MedicationScheduleScreen() {
 
   // Error state
   const [error, setError] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const handleAddTime = () => {
     if (times.length < 6) {
@@ -155,7 +158,7 @@ export default function MedicationScheduleScreen() {
     return true;
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!validateForm()) return;
 
     // Calculate frequency text and times for interval schedule
@@ -184,29 +187,68 @@ export default function MedicationScheduleScreen() {
       frequency = `${times.length}x daily`;
     }
 
-    // Prepare schedule data
-    const scheduleData = {
+    // Prepare schedule data using dot notation for nested fields to support deleteField()
+    const scheduleData: any = {
       dosage,
-      schedule: {
-        type: scheduleType,
-        startTime: scheduleType === "interval" ? startTime : undefined,
-        dosesPerDay:
-          scheduleType === "interval" ? parseInt(dosesPerDay) : undefined,
-        hoursBetweenDoses:
-          scheduleType === "interval" ? parseInt(hoursBetweenDoses) : undefined,
-        times: (scheduleType === "specific_times" ? times : calculatedTimes) || [],
-        frequency,
-      },
-      duration: {
-        type: durationType,
-        days: durationType === "limited" ? parseInt(durationDays) : undefined,
-      },
-      refillReminder:
-        durationType === "permanent" && refillReminderDays
-          ? parseInt(refillReminderDays)
-          : undefined,
+      "schedule.type": scheduleType,
+      "schedule.times": (scheduleType === "specific_times" ? times : calculatedTimes) || [],
+      "schedule.frequency": frequency,
+      "duration.type": durationType,
     };
 
+    // Add interval-specific fields or use deleteField to remove them
+    if (scheduleType === "interval") {
+      scheduleData["schedule.startTime"] = startTime;
+      scheduleData["schedule.dosesPerDay"] = parseInt(dosesPerDay);
+      scheduleData["schedule.hoursBetweenDoses"] = parseInt(hoursBetweenDoses);
+    } else if (isEditMode) {
+      // In edit mode, explicitly delete interval fields when switching to specific times
+      scheduleData["schedule.startTime"] = deleteField();
+      scheduleData["schedule.dosesPerDay"] = deleteField();
+      scheduleData["schedule.hoursBetweenDoses"] = deleteField();
+    }
+
+    // Handle duration days
+    if (durationType === "limited") {
+      scheduleData["duration.days"] = parseInt(durationDays);
+    } else if (isEditMode) {
+      // In edit mode, explicitly delete days field when switching to permanent
+      scheduleData["duration.days"] = deleteField();
+    }
+
+    // Handle refill reminder
+    if (durationType === "permanent" && refillReminderDays) {
+      scheduleData.refillReminder = parseInt(refillReminderDays);
+    } else if (isEditMode) {
+      // In edit mode, explicitly delete refillReminder if not set
+      scheduleData.refillReminder = deleteField();
+    }
+
+    // If in edit mode, update the medication directly and navigate back
+    if (isEditMode && existingMedication?.id) {
+      setIsUpdating(true);
+      try {
+        const result = await medicationService.updateMedication(
+          existingMedication.id,
+          scheduleData
+        );
+
+        if (result.success) {
+          // Navigate back to Prescriptions screen (go back twice - once to MedicationView, once to PrescriptionsMain)
+          navigation.navigate("PrescriptionsMain");
+        } else {
+          setError(result.error || "Failed to update medication");
+        }
+      } catch (err) {
+        console.error("Error updating medication:", err);
+        setError("An error occurred while updating medication");
+      } finally {
+        setIsUpdating(false);
+      }
+      return;
+    }
+
+    // If creating new medication, navigate to confirmation screen
     navigation.navigate("MedicationConfirm", {
       medicationName,
       brandName,
@@ -463,8 +505,14 @@ export default function MedicationScheduleScreen() {
           size="lg"
           onPress={handleContinue}
           style={styles.continueButton}
+          disabled={isUpdating}
         >
-          {isEditMode ? "Update Medication" : "Continue to Review"}
+          {isUpdating 
+            ? "Updating..." 
+            : isEditMode 
+              ? "Update Medication" 
+              : "Continue to Review"
+          }
         </Button>
 
         <View style={styles.bottomPadding} />

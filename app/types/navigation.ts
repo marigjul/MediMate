@@ -17,6 +17,16 @@ export type MainTabParamList = {
 // Home Stack - nested screens from Home tab
 export type HomeStackParamList = {
   HomeMain: undefined;
+  MedicationView: {
+    medication: any;
+  };
+  MedicationSchedule: {
+    medicationName: string;
+    brandName: string;
+    genericName?: string;
+    fdaData?: any;
+    existingMedication?: any;
+  };
   // Add more home-related screens here
   // Example: MedicationDetails: { medicationId: string };
 };
@@ -59,6 +69,9 @@ export type PrescriptionsStackParamList = {
       refillReminder?: number;
     };
     existingMedicationId?: string;
+  };
+  MedicationView: {
+    medication: any;
   };
 };
 

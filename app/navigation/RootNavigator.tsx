@@ -9,11 +9,12 @@ import { useAuth } from '../contexts/AuthContext';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import PrescriptionsScreen from '../screens/PrescriptionsScreen';
-import MedicationSearchScreen from '../screens/prescriptions/MedicationSearchScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import MedicationConfirmScreen from '../screens/prescriptions/MedicationConfirmScreen';
 import MedicationDetailScreen from '../screens/prescriptions/MedicationDetailScreen';
 import MedicationScheduleScreen from '../screens/prescriptions/MedicationScheduleScreen';
-import MedicationConfirmScreen from '../screens/prescriptions/MedicationConfirmScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import MedicationSearchScreen from '../screens/prescriptions/MedicationSearchScreen';
+import MedicationViewScreen from '../screens/prescriptions/MedicationViewScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
 
 // Import types
@@ -48,6 +49,8 @@ function HomeNavigator() {
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
       <HomeStack.Screen name="HomeMain" component={HomeScreen} />
+      <HomeStack.Screen name="MedicationView" component={MedicationViewScreen} />
+      <HomeStack.Screen name="MedicationSchedule" component={MedicationScheduleScreen} />
     </HomeStack.Navigator>
   );
 }
@@ -61,6 +64,7 @@ function PrescriptionsNavigator() {
       <PrescriptionsStack.Screen name="MedicationDetail" component={MedicationDetailScreen} />
       <PrescriptionsStack.Screen name="MedicationSchedule" component={MedicationScheduleScreen} />
       <PrescriptionsStack.Screen name="MedicationConfirm" component={MedicationConfirmScreen} />
+      <PrescriptionsStack.Screen name="MedicationView" component={MedicationViewScreen} />
     </PrescriptionsStack.Navigator>
   );
 }
