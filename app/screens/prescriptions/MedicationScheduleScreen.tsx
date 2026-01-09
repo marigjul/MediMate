@@ -248,12 +248,36 @@ export default function MedicationScheduleScreen() {
     }
 
     // If creating new medication, navigate to confirmation screen
+    // Convert dot notation to nested object for navigation
+    const scheduleDataForNav = {
+      dosage,
+      schedule: {
+        type: scheduleType,
+        times: (scheduleType === "specific_times" ? times : calculatedTimes) || [],
+        frequency: frequency,
+        ...(scheduleType === "interval" && {
+          startTime: startTime,
+          dosesPerDay: parseInt(dosesPerDay),
+          hoursBetweenDoses: parseInt(hoursBetweenDoses),
+        }),
+      },
+      duration: {
+        type: durationType,
+        ...(durationType === "limited" && {
+          days: parseInt(durationDays),
+        }),
+      },
+      ...(durationType === "permanent" && refillReminderDays && {
+        refillReminder: parseInt(refillReminderDays),
+      }),
+    };
+
     (navigation as any).navigate("MedicationConfirm", {
       medicationName,
       brandName,
       genericName,
       fdaData,
-      scheduleData,
+      scheduleData: scheduleDataForNav,
       existingMedicationId: existingMedication?.id,
     });
   };

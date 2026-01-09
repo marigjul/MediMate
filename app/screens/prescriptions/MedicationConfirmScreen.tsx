@@ -45,14 +45,16 @@ export default function MedicationConfirmScreen() {
   const isEditMode = !!existingMedicationId;
 
   const formatTimes = () => {
+    if (!scheduleData?.schedule?.times) return "";
     if (scheduleData.schedule.type === "interval") {
-      return scheduleData.schedule.times?.join(", ") || "";
+      return scheduleData.schedule.times.join(", ");
     } else {
-      return scheduleData.schedule.times?.join(", ") || "";
+      return scheduleData.schedule.times.join(", ");
     }
   };
 
   const formatDuration = () => {
+    if (!scheduleData?.duration) return "Not specified";
     if (scheduleData.duration.type === "permanent") {
       return "Ongoing (no end date)";
     } else {
@@ -218,7 +220,7 @@ export default function MedicationConfirmScreen() {
           {/* Dosage */}
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Dosage</Text>
-            <Text style={styles.summaryValue}>{scheduleData.dosage}</Text>
+            <Text style={styles.summaryValue}>{scheduleData?.dosage || "Not specified"}</Text>
           </View>
 
           {/* Schedule */}
@@ -226,7 +228,7 @@ export default function MedicationConfirmScreen() {
             <Text style={styles.summaryLabel}>Schedule</Text>
             <View style={styles.summaryValueContainer}>
               <Text style={styles.summaryValue}>
-                {scheduleData.schedule.frequency}
+                {scheduleData?.schedule?.frequency || "Not specified"}
               </Text>
               <Text style={styles.summarySubValue}>{formatTimes()}</Text>
             </View>
