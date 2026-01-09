@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useState } from "react";
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Button } from "../components/button";
 import { Card, CardContent } from "../components/card";
 import { useAuth } from "../contexts/AuthContext";
+import { medicationService } from "../services/medicationService";
 import type { HomeStackParamList } from "../types/navigation";
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
@@ -13,32 +14,107 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<
   "HomeMain"
 >;
 
-// Placeholder data -  replace with real data later
-const PLACEHOLDER_MEDICATIONS: Medication[] = [
-  { id: 1, name: "Ibuprofen", time: "08:00", status: "taken" },
-  { id: 2, name: "Amoxicillin", time: "09:00", status: "taken" },
-  { id: 3, name: "Lisinopril", time: "09:00", status: "taken" },
-  { id: 4, name: "Ibuprofen", time: "14:00", status: "pending" },
-  { id: 5, name: "Amoxicillin", time: "17:00", status: "pending" },
-  { id: 6, name: "Ibuprofen", time: "20:00", status: "pending" },
-];
-
 type MedicationStatus = "pending" | "taken" | "missed";
 
-interface Medication {
-  id: number;
+interface TodayMedication {
+  id: string;
+  medicationId: string;
   name: string;
   time: string;
   status: MedicationStatus;
+  fullMedication: any;
+}
+
+interface DbMedication {
+  id: string;
+  medicationName: string;
+  fdaData?: {
+    brandName?: string;
+    genericName?: string;
+  };
+  schedule: {
+    times?: string[];
+    frequency: string;
+  };
+  duration?: {
+    type: "permanent" | "limited";
+    days?: number;
+  };
+  dosage?: string;
+  streak?: number;
+  refillReminder?: number;
 }
 
 export default function HomeScreen() {
   const { user } = useAuth();
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const [medications, setMedications] = useState<Medication[]>(PLACEHOLDER_MEDICATIONS);
+  const [medications, setMedications] = useState<TodayMedication[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
+  const [selectedMedication, setSelectedMedication] = useState<TodayMedication | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<MedicationStatus | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      loadTodaysMedications();
+    } else {
+      setLoading(false);
+      setMedications([]);
+    }
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        loadTodaysMedications();
+      }
+    }, [user])
+  );
+
+  const loadTodaysMedications = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await medicationService.getUserMedications(user.uid);
+
+      if (result.success && result.medications) {
+        // Generate today's schedule from medications
+        const todaysSchedule: TodayMedication[] = [];
+        
+        result.medications.forEach((med: DbMedication) => {
+          const times = med.schedule?.times || [];
+          const displayName = med.fdaData?.brandName || 
+            med.medicationName.charAt(0).toUpperCase() + med.medicationName.slice(1);
+          
+          times.forEach((time, index) => {
+            todaysSchedule.push({
+              id: `${med.id}-${index}`,
+              medicationId: med.id,
+              name: displayName,
+              time: time,
+              status: "pending", // In a real app, this would be fetched from a daily log
+              fullMedication: med,
+            });
+          });
+        });
+
+        // Sort by time
+        todaysSchedule.sort((a, b) => a.time.localeCompare(b.time));
+        setMedications(todaysSchedule);
+      } else {
+        setMedications([]);
+      }
+    } catch (error) {
+      console.error("Error loading medications:", error);
+      setMedications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Get greeting based on time of day
   const getGreeting = () => {
@@ -50,7 +126,9 @@ export default function HomeScreen() {
 
   // Get next medication
   const getNextMedication = () => {
-    const pending = medications.filter(med => med.status === "pending");
+    const now = new Date();
+    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const pending = medications.filter(med => med.status === "pending" && med.time >= currentTime);
     return pending.length > 0 ? pending[0] : null;
   };
 
@@ -62,7 +140,7 @@ export default function HomeScreen() {
   };
 
   // Open status change modal
-  const openStatusModal = (medication: Medication) => {
+  const openStatusModal = (medication: TodayMedication) => {
     setSelectedMedication(medication);
     setSelectedStatus(medication.status);
     setModalVisible(true);
@@ -91,29 +169,21 @@ export default function HomeScreen() {
 
   // Handle view details - navigate to medication view
   const handleViewDetails = () => {
-    // For now, using placeholder data structure
-    // In a real app, you'd fetch the full medication data
-    const mockMedication = {
-      id: "1",
-      medicationName: nextMed?.name.toLowerCase() || "medication",
-      fdaData: {
-        brandName: nextMed?.name || "Medication",
-      },
-      schedule: {
-        times: [nextMed?.time || "09:00"],
-        frequency: "Daily",
-      },
-      duration: {
-        type: "permanent",
-      },
-      dosage: "As prescribed",
-    };
-    
-    navigation.navigate("MedicationView", { medication: mockMedication });
+    if (!nextMed?.fullMedication) return;
+    navigation.navigate("MedicationView", { medication: nextMed.fullMedication });
   };
 
   const nextMed = getNextMedication();
   const progress = getTodaysProgress();
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3B82F6" />
+        <Text style={styles.loadingText}>Loading today's schedule...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -285,6 +355,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#E0F2FE",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E0F2FE",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#6B7280",
   },
   content: {
     padding: 20,
