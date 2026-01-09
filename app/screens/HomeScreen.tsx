@@ -21,6 +21,7 @@ interface TodayMedication {
   time: string;
   status: MedicationStatus;
   fullMedication: any;
+  isTomorrow?: boolean;
 }
 
 interface DbMedication {
@@ -137,8 +138,30 @@ export default function HomeScreen() {
   const getNextMedication = () => {
     const now = new Date();
     const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    const pending = medications.filter(med => med.status === "pending" && med.time >= currentTime);
-    return pending.length > 0 ? pending[0] : null;
+    
+    // First, check for today's pending medications
+    const todayPending = medications.filter(med => med.status === "pending" && med.time >= currentTime);
+    if (todayPending.length > 0) {
+      return todayPending[0];
+    }
+    
+    // If all today's medications are done (taken or past), show tomorrow's first medication
+    const allDone = medications.every(med => med.status === "taken" || med.time < currentTime);
+    if (allDone && medications.length > 0) {
+      // Get all medications and find the earliest time
+      const allMedications = [...medications];
+      allMedications.sort((a, b) => a.time.localeCompare(b.time));
+      
+      if (allMedications.length > 0) {
+        return {
+          ...allMedications[0],
+          isTomorrow: true,
+          status: "pending" as MedicationStatus, // Tomorrow will be pending
+        };
+      }
+    }
+    
+    return null;
   };
 
   // Calculate today's progress
@@ -233,7 +256,9 @@ export default function HomeScreen() {
                 <Text style={styles.nextMedLabel}>Next medication</Text>
               </View>
               <Text style={styles.medicationName}>{nextMed.name}</Text>
-              <Text style={styles.medicationTime}>at {nextMed.time}</Text>
+              <Text style={styles.medicationTime}>
+                {nextMed.isTomorrow ? `Tomorrow, at ${nextMed.time}` : `at ${nextMed.time}`}
+              </Text>
               <Button 
                 style={styles.detailsButton}
                 onPress={handleViewDetails}
