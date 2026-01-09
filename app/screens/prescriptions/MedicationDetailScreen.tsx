@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { RouteProp } from "@react-navigation/native";
-import { PrescriptionsStackParamList } from "@/app/types/navigation";
 import { Button } from "@/app/components/button";
 import { medicationService } from "@/app/services/medicationService";
+import { PrescriptionsStackParamList } from "@/app/types/navigation";
+import type { RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 type MedicationDetailNavigationProp = NativeStackNavigationProp<
   PrescriptionsStackParamList,
@@ -35,11 +35,7 @@ export default function MedicationDetailScreen() {
   const [fdaData, setFdaData] = useState<any>(null);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    loadMedicationDetails();
-  }, []);
-
-  const loadMedicationDetails = async () => {
+  const loadMedicationDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -60,7 +56,11 @@ export default function MedicationDetailScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [medicationName]);
+
+  useEffect(() => {
+    loadMedicationDetails();
+  }, [loadMedicationDetails]);
 
   const handleContinue = () => {
     navigation.navigate("MedicationSchedule", {

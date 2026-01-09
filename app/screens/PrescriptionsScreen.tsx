@@ -63,24 +63,7 @@ export default function PrescriptionsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      loadMedications();
-    } else {
-      setLoading(false);
-      setMedications([]);
-    }
-  }, [user]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (user) {
-        loadMedications();
-      }
-    }, [user])
-  );
-
-  const loadMedications = async () => {
+  const loadMedications = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -106,7 +89,18 @@ export default function PrescriptionsScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        loadMedications();
+      } else {
+        setLoading(false);
+        setMedications([]);
+      }
+    }, [user, loadMedications])
+  );
 
   const handleAddMedication = () => {
     navigation.navigate("MedicationSearch");

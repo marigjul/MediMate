@@ -7,12 +7,12 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { deleteField } from "firebase/firestore";
 import React, { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 type MedicationScheduleNavigationProp = NativeStackNavigationProp<
@@ -80,14 +80,28 @@ export default function MedicationScheduleScreen() {
 
   const handleAddTime = () => {
     if (times.length < 6) {
-      const lastTime = times[times.length - 1];
-      const [hours, minutes] = lastTime.split(":").map(Number);
-      let newHours = hours + 4;
-      if (newHours >= 24) newHours -= 24;
-      const newTime = `${newHours.toString().padStart(2, "0")}:${minutes
-        .toString()
-        .padStart(2, "0")}`;
-      setTimes([...times, newTime]);
+      // Get the last time, default to "09:00" if empty or invalid
+      const lastTime = times[times.length - 1] || "09:00";
+      const timeParts = lastTime.split(":");
+
+      // Ensure we have valid time parts
+      if (timeParts.length === 2) {
+        const [hours, minutes] = timeParts.map(Number);
+
+        // Check if hours and minutes are valid numbers
+        if (!isNaN(hours) && !isNaN(minutes)) {
+          let newHours = hours + 4;
+          if (newHours >= 24) newHours -= 24;
+          const newTime = `${newHours.toString().padStart(2, "0")}:${minutes
+            .toString()
+            .padStart(2, "0")}`;
+          setTimes([...times, newTime]);
+          return;
+        }
+      }
+
+      // If we couldn't parse the last time, default to "09:00"
+      setTimes([...times, "09:00"]);
     }
   };
 
@@ -191,7 +205,8 @@ export default function MedicationScheduleScreen() {
     const scheduleData: any = {
       dosage,
       "schedule.type": scheduleType,
-      "schedule.times": (scheduleType === "specific_times" ? times : calculatedTimes) || [],
+      "schedule.times":
+        (scheduleType === "specific_times" ? times : calculatedTimes) || [],
       "schedule.frequency": frequency,
       "duration.type": durationType,
     };
@@ -507,12 +522,11 @@ export default function MedicationScheduleScreen() {
           style={styles.continueButton}
           disabled={isUpdating}
         >
-          {isUpdating 
-            ? "Updating..." 
-            : isEditMode 
-              ? "Update Medication" 
-              : "Continue to Review"
-          }
+          {isUpdating
+            ? "Updating..."
+            : isEditMode
+            ? "Update Medication"
+            : "Continue to Review"}
         </Button>
 
         <View style={styles.bottomPadding} />
