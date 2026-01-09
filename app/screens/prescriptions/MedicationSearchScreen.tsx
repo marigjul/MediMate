@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { PrescriptionsStackParamList } from "../../types/navigation";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { medicationService } from "../../services/medicationService";
+import type { PrescriptionsStackParamList } from "../../types/navigation";
 
 // Icons
 const BackIcon = () => <Text style={styles.backIcon}>←</Text>;
@@ -116,7 +116,9 @@ export default function MedicationSearchScreen() {
           <Text style={styles.manufacturer}>{item.manufacturer}</Text>
         )}
       </View>
-      <ChevronRightIcon />
+      <View>
+        <ChevronRightIcon />
+      </View>
     </TouchableOpacity>
   );
 

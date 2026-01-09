@@ -97,6 +97,17 @@ function MainNavigator() {
             <MaterialCommunityIcons name="home" size={size} color={color} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Prevent default behavior
+            e.preventDefault();
+            // Navigate to the tab and reset its stack
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Home' }],
+            });
+          },
+        })}
       />
       <MainTab.Screen
         name="Prescriptions"
@@ -106,6 +117,17 @@ function MainNavigator() {
             <MaterialCommunityIcons name="pill" size={size} color={color} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Prevent default behavior
+            e.preventDefault();
+            // Navigate to the tab and reset its stack
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Prescriptions' }],
+            });
+          },
+        })}
       />
       <MainTab.Screen
         name="Profile"
@@ -115,6 +137,17 @@ function MainNavigator() {
             <MaterialCommunityIcons name="account" size={size} color={color} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Prevent default behavior
+            e.preventDefault();
+            // Navigate to the tab and reset its stack
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Profile' }],
+            });
+          },
+        })}
       />
     </MainTab.Navigator>
   );
