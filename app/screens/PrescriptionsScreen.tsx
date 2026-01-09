@@ -3,22 +3,22 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { Button } from "../components/button";
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardAction,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
 } from "../components/card";
 import { useAuth } from "../contexts/AuthContext";
 import { medicationService } from "../services/medicationService";
@@ -113,7 +113,7 @@ export default function PrescriptionsScreen() {
   };
 
   const handleMedicationPress = (medication: Medication) => {
-    // TODO: Navigate to medication detail screen
+    navigation.navigate("MedicationView", { medication });
   };
 
   const formatSchedule = (medication: Medication) => {

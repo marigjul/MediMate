@@ -1,9 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Button } from "../components/button";
 import { Card, CardContent } from "../components/card";
 import { useAuth } from "../contexts/AuthContext";
+import type { HomeStackParamList } from "../types/navigation";
+
+type HomeScreenNavigationProp = NativeStackNavigationProp<
+  HomeStackParamList,
+  "HomeMain"
+>;
 
 // Placeholder data -  replace with real data later
 const PLACEHOLDER_MEDICATIONS: Medication[] = [
@@ -26,6 +34,7 @@ interface Medication {
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const navigation = useNavigation<HomeScreenNavigationProp>();
   const [medications, setMedications] = useState<Medication[]>(PLACEHOLDER_MEDICATIONS);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
@@ -80,6 +89,29 @@ export default function HomeScreen() {
     setSelectedStatus(null);
   };
 
+  // Handle view details - navigate to medication view
+  const handleViewDetails = () => {
+    // For now, using placeholder data structure
+    // In a real app, you'd fetch the full medication data
+    const mockMedication = {
+      id: "1",
+      medicationName: nextMed?.name.toLowerCase() || "medication",
+      fdaData: {
+        brandName: nextMed?.name || "Medication",
+      },
+      schedule: {
+        times: [nextMed?.time || "09:00"],
+        frequency: "Daily",
+      },
+      duration: {
+        type: "permanent",
+      },
+      dosage: "As prescribed",
+    };
+    
+    navigation.navigate("MedicationView", { medication: mockMedication });
+  };
+
   const nextMed = getNextMedication();
   const progress = getTodaysProgress();
 
@@ -103,7 +135,7 @@ export default function HomeScreen() {
               <Text style={styles.medicationTime}>at {nextMed.time}</Text>
               <Button 
                 style={styles.detailsButton}
-                disabled={true}
+                onPress={handleViewDetails}
               >
                 View details
               </Button>
