@@ -95,3 +95,21 @@ export type PrescriptionsNavigationProp = NativeStackNavigationProp<Prescription
 export type ProfileNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 export type RootNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export type MainTabNavigationProp = BottomTabNavigationProp<MainTabParamList>;
+
+// Daily medication log types
+export type MedicationStatus = 'pending' | 'taken' | 'missed';
+
+export interface DailyMedicationLog {
+  medicationId: string;
+  scheduledTime: string;
+  status: MedicationStatus;
+  takenAt?: string; // ISO timestamp of when they actually took it
+}
+
+export interface DailyLog {
+  userId: string;
+  date: string; // YYYY-MM-DD format
+  medications: DailyMedicationLog[];
+  createdAt?: string;
+  updatedAt?: string;
+}

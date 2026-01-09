@@ -2,6 +2,7 @@ import type { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth } from '../config/firebase';
+import { medicationService } from '../services/medicationService';
 
 interface AuthContextType {
   user: User | null;
@@ -33,6 +34,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastStreakCheck, setLastStreakCheck] = useState<string | null>(null);
 
   const refreshUser = async () => {
     // Force refresh the current user from Firebase
@@ -42,11 +44,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Check and update streaks on a new day
+  const checkStreaksIfNewDay = async (userId: string) => {
+    const today = medicationService.getTodayDateString();
+    
+    // Only check once per day
+    if (lastStreakCheck === today) {
+      return;
+    }
+
+    try {
+      console.log('Checking streaks for new day:', today);
+      const result = await medicationService.checkAndUpdateStreaks(userId);
+      if (result.success) {
+        setLastStreakCheck(today);
+        console.log('Streaks updated successfully');
+      }
+    } catch (error) {
+      console.error('Error checking streaks:', error);
+    }
+  };
+
   useEffect(() => {
     // Listen for auth state changes
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
+
+      // Check streaks when user logs in or app starts with logged in user
+      if (firebaseUser) {
+        await checkStreaksIfNewDay(firebaseUser.uid);
+      }
     });
 
     // Cleanup subscription on unmount
