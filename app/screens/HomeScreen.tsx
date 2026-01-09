@@ -70,6 +70,13 @@ export default function HomeScreen() {
     }, [user])
   );
 
+  // Check for missed medications periodically
+  useEffect(() => {
+    if (medications.length > 0) {
+      autoMarkMissedMedications();
+    }
+  }, [medications.length]);
+
   const loadTodaysMedications = async () => {
     if (!user) {
       setLoading(false);
@@ -164,6 +171,60 @@ export default function HomeScreen() {
     return null;
   };
 
+  // Check if a medication is past its 30-minute window
+  const isMedicationMissed = (time: string) => {
+    const now = new Date();
+    const [hours, minutes] = time.split(':').map(Number);
+    const scheduledTime = new Date();
+    scheduledTime.setHours(hours, minutes, 0, 0);
+    
+    // Add 30 minutes to scheduled time
+    const windowEnd = new Date(scheduledTime.getTime() + 30 * 60 * 1000);
+    
+    return now > windowEnd;
+  };
+
+  // Check if medication time has passed (scheduled time, not window)
+  const isMedicationTimePassed = (time: string) => {
+    const now = new Date();
+    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    return currentTime > time;
+  };
+
+  // Get available status options for a medication based on time
+  const getAvailableStatuses = (time: string): MedicationStatus[] => {
+    if (isMedicationTimePassed(time)) {
+      // After scheduled time: can only mark as taken or missed, not pending
+      return ['taken', 'missed'];
+    } else {
+      // Before or at scheduled time: can be pending or taken
+      return ['pending', 'taken'];
+    }
+  };
+
+  // Auto-mark medications as missed if past their window
+  const autoMarkMissedMedications = async () => {
+    const updates: Promise<any>[] = [];
+    
+    medications.forEach(med => {
+      if (med.status === 'pending' && isMedicationMissed(med.time)) {
+        console.log('[HomeScreen] Auto-marking as missed:', med.name, med.time);
+        updates.push(
+          medicationService.updateMedicationTimeStatus(
+            med.medicationId,
+            med.time,
+            'missed'
+          )
+        );
+      }
+    });
+
+    if (updates.length > 0) {
+      await Promise.all(updates);
+      await loadTodaysMedications();
+    }
+  };
+
   // Calculate today's progress
   const getTodaysProgress = () => {
     const taken = medications.filter(med => med.status === "taken").length;
@@ -174,7 +235,12 @@ export default function HomeScreen() {
   // Open status change modal
   const openStatusModal = (medication: TodayMedication) => {
     setSelectedMedication(medication);
-    setSelectedStatus(medication.status);
+    const availableStatuses = getAvailableStatuses(medication.time);
+    // If current status is not available anymore, default to first available
+    const defaultStatus = availableStatuses.includes(medication.status) 
+      ? medication.status 
+      : availableStatuses[0];
+    setSelectedStatus(defaultStatus);
     setModalVisible(true);
   };
 
@@ -337,53 +403,59 @@ export default function HomeScreen() {
             </Text>
 
             <View style={styles.statusOptions}>
-              <TouchableOpacity
-                style={[
-                  styles.statusOption,
-                  selectedStatus === "pending" && styles.statusOptionSelected,
-                ]}
-                onPress={() => setSelectedStatus("pending")}
-              >
-                <View style={[styles.statusIndicator, styles.statusIndicatorPending]} />
-                <Text style={[
-                  styles.statusOptionText,
-                  selectedStatus === "pending" && styles.statusOptionTextSelected,
-                ]}>
-                  Pending
-                </Text>
-              </TouchableOpacity>
+              {selectedMedication && getAvailableStatuses(selectedMedication.time).includes('pending') && (
+                <TouchableOpacity
+                  style={[
+                    styles.statusOption,
+                    selectedStatus === "pending" && styles.statusOptionSelected,
+                  ]}
+                  onPress={() => setSelectedStatus("pending")}
+                >
+                  <View style={[styles.statusIndicator, styles.statusIndicatorPending]} />
+                  <Text style={[
+                    styles.statusOptionText,
+                    selectedStatus === "pending" && styles.statusOptionTextSelected,
+                  ]}>
+                    Pending
+                  </Text>
+                </TouchableOpacity>
+              )}
 
-              <TouchableOpacity
-                style={[
-                  styles.statusOption,
-                  selectedStatus === "taken" && styles.statusOptionSelected,
-                ]}
-                onPress={() => setSelectedStatus("taken")}
-              >
-                <View style={[styles.statusIndicator, styles.statusIndicatorTaken]} />
-                <Text style={[
-                  styles.statusOptionText,
-                  selectedStatus === "taken" && styles.statusOptionTextSelected,
-                ]}>
-                  Taken
-                </Text>
-              </TouchableOpacity>
+              {selectedMedication && getAvailableStatuses(selectedMedication.time).includes('taken') && (
+                <TouchableOpacity
+                  style={[
+                    styles.statusOption,
+                    selectedStatus === "taken" && styles.statusOptionSelected,
+                  ]}
+                  onPress={() => setSelectedStatus("taken")}
+                >
+                  <View style={[styles.statusIndicator, styles.statusIndicatorTaken]} />
+                  <Text style={[
+                    styles.statusOptionText,
+                    selectedStatus === "taken" && styles.statusOptionTextSelected,
+                  ]}>
+                    Taken
+                  </Text>
+                </TouchableOpacity>
+              )}
 
-              <TouchableOpacity
-                style={[
-                  styles.statusOption,
-                  selectedStatus === "missed" && styles.statusOptionSelected,
-                ]}
-                onPress={() => setSelectedStatus("missed")}
-              >
-                <View style={[styles.statusIndicator, styles.statusIndicatorMissed]} />
-                <Text style={[
-                  styles.statusOptionText,
-                  selectedStatus === "missed" && styles.statusOptionTextSelected,
-                ]}>
-                  Missed
-                </Text>
-              </TouchableOpacity>
+              {selectedMedication && getAvailableStatuses(selectedMedication.time).includes('missed') && (
+                <TouchableOpacity
+                  style={[
+                    styles.statusOption,
+                    selectedStatus === "missed" && styles.statusOptionSelected,
+                  ]}
+                  onPress={() => setSelectedStatus("missed")}
+                >
+                  <View style={[styles.statusIndicator, styles.statusIndicatorMissed]} />
+                  <Text style={[
+                    styles.statusOptionText,
+                    selectedStatus === "missed" && styles.statusOptionTextSelected,
+                  ]}>
+                    Missed
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             <View style={styles.modalButtons}>
