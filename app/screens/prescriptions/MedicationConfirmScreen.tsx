@@ -282,7 +282,7 @@ export default function MedicationConfirmScreen() {
           style={styles.confirmButton}
         >
           {saving ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color="#FFFFFF" testID="loading-indicator" />
           ) : isEditMode ? (
             "Save Changes"
           ) : (

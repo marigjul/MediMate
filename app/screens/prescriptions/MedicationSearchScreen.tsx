@@ -209,7 +209,7 @@ export default function MedicationSearchScreen() {
         </View>
 
         {loading && (
-          <View style={styles.loadingContainer}>
+          <View style={styles.loadingContainer} testID="loading-indicator">
             <ActivityIndicator size="small" color="#3B82F6" />
             <Text style={styles.loadingText}>Searching FDA database...</Text>
           </View>
