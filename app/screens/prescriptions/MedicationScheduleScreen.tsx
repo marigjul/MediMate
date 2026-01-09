@@ -1,29 +1,28 @@
 import { Button } from "@/app/components/button";
 import { medicationService } from "@/app/services/medicationService";
-import { PrescriptionsStackParamList } from "@/app/types/navigation";
+import { HomeStackParamList, PrescriptionsStackParamList } from "@/app/types/navigation";
 import type { RouteProp } from "@react-navigation/native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { deleteField } from "firebase/firestore";
 import React, { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 
-type MedicationScheduleNavigationProp = NativeStackNavigationProp<
-  PrescriptionsStackParamList,
-  "MedicationSchedule"
->;
+// Support navigation from both Home and Prescriptions stacks
+type MedicationScheduleNavigationProp = 
+  | NativeStackNavigationProp<PrescriptionsStackParamList, "MedicationSchedule">
+  | NativeStackNavigationProp<HomeStackParamList, "MedicationSchedule">;
 
-type MedicationScheduleRouteProp = RouteProp<
-  PrescriptionsStackParamList,
-  "MedicationSchedule"
->;
+type MedicationScheduleRouteProp = 
+  | RouteProp<PrescriptionsStackParamList, "MedicationSchedule">
+  | RouteProp<HomeStackParamList, "MedicationSchedule">;
 
 const BackIcon = () => <Text style={styles.backIcon}>←</Text>;
 const PlusIcon = () => <Text style={styles.plusIcon}>+</Text>;
@@ -234,8 +233,8 @@ export default function MedicationScheduleScreen() {
         );
 
         if (result.success) {
-          // Navigate back to Prescriptions screen (go back twice - once to MedicationView, once to PrescriptionsMain)
-          navigation.navigate("PrescriptionsMain");
+          // Go back to the root of the stack (HomeMain or PrescriptionsMain)
+          navigation.popToTop();
         } else {
           setError(result.error || "Failed to update medication");
         }
@@ -249,7 +248,7 @@ export default function MedicationScheduleScreen() {
     }
 
     // If creating new medication, navigate to confirmation screen
-    navigation.navigate("MedicationConfirm", {
+    (navigation as any).navigate("MedicationConfirm", {
       medicationName,
       brandName,
       genericName,

@@ -4,27 +4,26 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { Button } from "../../components/button";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { useAuth } from "../../contexts/AuthContext";
 import { medicationService } from "../../services/medicationService";
-import type { PrescriptionsStackParamList } from "../../types/navigation";
+import type { HomeStackParamList, PrescriptionsStackParamList } from "../../types/navigation";
 
-type MedicationViewNavigationProp = NativeStackNavigationProp<
-  PrescriptionsStackParamList,
-  "MedicationView"
->;
+// Support navigation from both Home and Prescriptions stacks
+type MedicationViewNavigationProp = 
+  | NativeStackNavigationProp<PrescriptionsStackParamList, "MedicationView">
+  | NativeStackNavigationProp<HomeStackParamList, "MedicationView">;
 
-type MedicationViewRouteProp = RouteProp<
-  PrescriptionsStackParamList,
-  "MedicationView"
->;
+type MedicationViewRouteProp = 
+  | RouteProp<PrescriptionsStackParamList, "MedicationView">
+  | RouteProp<HomeStackParamList, "MedicationView">;
 
 const BackIcon = () => (
   <MaterialCommunityIcons name="chevron-left" size={28} color="#3B82F6" />
@@ -57,7 +56,8 @@ export default function MedicationViewScreen() {
   };
 
   const handleEdit = () => {
-    navigation.navigate("MedicationSchedule", {
+    // Use type assertion to navigate - works for both Home and Prescriptions stacks
+    (navigation as any).navigate("MedicationSchedule", {
       medicationName: medication.medicationName,
       brandName: displayName,
       genericName: medication.fdaData?.genericName,

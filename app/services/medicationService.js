@@ -530,19 +530,9 @@ export const medicationService = {
   // Check previous day's completion and update streaks
   checkAndUpdateStreaks: async (userId) => {
     try {
+      console.log('[checkAndUpdateStreaks] Starting streak check for user:', userId);
       const yesterday = medicationService.getYesterdayDateString();
       const today = medicationService.getTodayDateString();
-
-      // Get yesterday's log
-      const yesterdayLog = await medicationService.getDailyLog(
-        userId,
-        yesterday
-      );
-
-      if (!yesterdayLog.success || !yesterdayLog.log?.medications) {
-        console.log("No log found for yesterday");
-        return { success: true, message: "No log to process" };
-      }
 
       // Get all user medications
       const medsResult = await medicationService.getUserMedications(userId);
@@ -550,60 +540,47 @@ export const medicationService = {
         return { success: false, error: "Could not fetch medications" };
       }
 
-      // Check each medication's completion status
+      console.log('[checkAndUpdateStreaks] Checking', medsResult.medications.length, 'medications');
+
+      // Check each medication's completion status for yesterday
       const updates = [];
       for (const med of medsResult.medications) {
         const scheduledTimes = med.schedule?.times || [];
         
-        // Find all entries for this medication in yesterday's log
-        const medEntries = yesterdayLog.log.medications.filter(
-          (entry) => entry.medicationId === med.id
-        );
+        // If statusDate is yesterday, check if all doses were taken
+        if (med.statusDate === yesterday && med.todayStatus) {
+          const allTaken = scheduledTimes.every((time) => {
+            return med.todayStatus[time] === "taken";
+          });
 
-        // Check if all scheduled doses were taken
-        const allTaken = scheduledTimes.every((time) => {
-          const entry = medEntries.find((e) => e.scheduledTime === time);
-          return entry && entry.status === "taken";
-        });
+          const currentStreak = med.streak || 0;
+          const newStreak = allTaken ? currentStreak + 1 : 0;
 
-        // Mark any pending doses as missed
-        const updatedEntries = yesterdayLog.log.medications.map((entry) => {
-          if (entry.medicationId === med.id && entry.status === "pending") {
-            return { ...entry, status: "missed" };
+          console.log('[checkAndUpdateStreaks]', med.medicationName, '- All taken:', allTaken, '- Old streak:', currentStreak, '- New streak:', newStreak);
+
+          if (newStreak !== currentStreak) {
+            updates.push(
+              medicationService.updateMedication(med.id, { streak: newStreak })
+            );
           }
-          return entry;
-        });
-
-        // Update yesterday's log with missed statuses
-        if (updatedEntries.length > 0) {
-          const q = query(
-            collection(db, "dailyLogs"),
-            where("userId", "==", userId),
-            where("date", "==", yesterday)
-          );
-          const snapshot = await getDocs(q);
-          if (!snapshot.empty) {
-            const logRef = doc(db, "dailyLogs", snapshot.docs[0].id);
-            await updateDoc(logRef, {
-              medications: updatedEntries,
-              updatedAt: serverTimestamp(),
-            });
+        } else if (med.statusDate !== today && med.statusDate !== yesterday) {
+          // If status is from an older date (user didn't use app yesterday), reset streak
+          console.log('[checkAndUpdateStreaks]', med.medicationName, '- Status from old date, resetting streak');
+          if (med.streak !== 0) {
+            updates.push(
+              medicationService.updateMedication(med.id, { streak: 0 })
+            );
           }
-        }
-
-        // Update streak based on completion
-        const currentStreak = med.streak || 0;
-        const newStreak = allTaken ? currentStreak + 1 : 0;
-
-        if (newStreak !== currentStreak) {
-          updates.push(
-            medicationService.updateMedication(med.id, { streak: newStreak })
-          );
         }
       }
 
       // Execute all streak updates
-      await Promise.all(updates);
+      if (updates.length > 0) {
+        await Promise.all(updates);
+        console.log('[checkAndUpdateStreaks] Updated', updates.length, 'streaks');
+      } else {
+        console.log('[checkAndUpdateStreaks] No streak updates needed');
+      }
 
       return {
         success: true,
