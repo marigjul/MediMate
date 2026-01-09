@@ -25,8 +25,41 @@ export type HomeStackParamList = {
 export type PrescriptionsStackParamList = {
   PrescriptionsMain: undefined;
   MedicationSearch: undefined;
-  // Add more prescription-related screens here
-  // Example: AddPrescription: undefined;
+  MedicationDetail: {
+    medicationName: string;
+    brandName: string;
+    genericName?: string;
+  };
+  MedicationSchedule: {
+    medicationName: string;
+    brandName: string;
+    genericName?: string;
+    fdaData?: any;
+    existingMedication?: any;
+  };
+  MedicationConfirm: {
+    medicationName: string;
+    brandName: string;
+    genericName?: string;
+    fdaData: any;
+    scheduleData: {
+      dosage: string;
+      schedule: {
+        type?: 'interval' | 'specific_times';
+        startTime?: string;
+        dosesPerDay?: number;
+        hoursBetweenDoses?: number;
+        times: string[];
+        frequency: string;
+      };
+      duration: {
+        type: 'permanent' | 'limited';
+        days?: number;
+      };
+      refillReminder?: number;
+    };
+    existingMedicationId?: string;
+  };
 };
 
 // Profile Stack - nested screens from Profile tab

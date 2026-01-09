@@ -1,18 +1,18 @@
-import { PrescriptionsStackParamList } from "@/app/types/navigation";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
   StyleSheet,
   Text,
+  View,
   TextInput,
   TouchableOpacity,
-  View,
+  FlatList,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { PrescriptionsStackParamList } from "../../types/navigation";
 import { medicationService } from "../../services/medicationService";
 
 // Icons
@@ -88,16 +88,13 @@ export default function MedicationSearchScreen() {
   };
 
   const handleMedicationSelect = (medication: MedicationResult) => {
-    // TODO: Navigate to schedule setup screen
-    // Pass medication details to next screen
     console.log("Selected medication:", medication);
 
-    // Later this will be:
-    // navigation.navigate("MedicationSchedule", {
-    //   medicationName: medication.brandName,
-    //   brandName: medication.brandName,
-    //   genericName: medication.genericName,
-    // });
+    navigation.navigate("MedicationDetail", {
+      medicationName: medication.brandName,
+      brandName: medication.brandName,
+      genericName: medication.genericName,
+    });
   };
 
   const handleBack = () => {

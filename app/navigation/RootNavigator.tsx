@@ -9,11 +9,14 @@ import { useAuth } from '../contexts/AuthContext';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import PrescriptionsScreen from '../screens/PrescriptionsScreen';
+import MedicationSearchScreen from '../screens/prescriptions/MedicationSearchScreen';
+import MedicationDetailScreen from '../screens/prescriptions/MedicationDetailScreen';
+import MedicationScheduleScreen from '../screens/prescriptions/MedicationScheduleScreen';
+import MedicationConfirmScreen from '../screens/prescriptions/MedicationConfirmScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
 
 // Import types
-import MedicationSearchScreen from '../screens/prescriptions/MedicationSearchScreen';
 import type {
   AuthStackParamList,
   HomeStackParamList,
@@ -45,7 +48,6 @@ function HomeNavigator() {
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
       <HomeStack.Screen name="HomeMain" component={HomeScreen} />
-      {/* Add more home-related screens here */}
     </HomeStack.Navigator>
   );
 }
@@ -54,9 +56,11 @@ function HomeNavigator() {
 function PrescriptionsNavigator() {
   return (
     <PrescriptionsStack.Navigator screenOptions={{ headerShown: false }}>
-    <PrescriptionsStack.Screen name="PrescriptionsMain" component={PrescriptionsScreen}/>
-    <PrescriptionsStack.Screen name="MedicationSearch" component={MedicationSearchScreen} />
-      {/* Add more prescription-related screens here */}
+      <PrescriptionsStack.Screen name="PrescriptionsMain" component={PrescriptionsScreen} />
+      <PrescriptionsStack.Screen name="MedicationSearch" component={MedicationSearchScreen} />
+      <PrescriptionsStack.Screen name="MedicationDetail" component={MedicationDetailScreen} />
+      <PrescriptionsStack.Screen name="MedicationSchedule" component={MedicationScheduleScreen} />
+      <PrescriptionsStack.Screen name="MedicationConfirm" component={MedicationConfirmScreen} />
     </PrescriptionsStack.Navigator>
   );
 }
@@ -67,7 +71,6 @@ function ProfileNavigator() {
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
-      {/* Add other profile screens here */}
     </ProfileStack.Navigator>
   );
 }
