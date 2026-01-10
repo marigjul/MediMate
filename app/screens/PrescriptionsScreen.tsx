@@ -279,7 +279,10 @@ export default function PrescriptionsScreen() {
 
         {error && (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>❌ {error}</Text>
+            <View style={styles.errorContent}>
+              <MaterialCommunityIcons name="alert-circle" size={20} color="#DC2626" style={styles.errorIcon} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
             <TouchableOpacity
               onPress={loadMedications}
               style={styles.retryButton}
@@ -407,11 +410,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  errorContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  errorIcon: {
+    marginRight: 8,
+  },
   errorText: {
     flex: 1,
     fontSize: 14,
     color: "#DC2626",
-    marginRight: 12,
   },
   retryButton: {
     backgroundColor: "#EF4444",

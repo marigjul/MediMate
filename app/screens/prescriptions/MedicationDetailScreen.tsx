@@ -99,7 +99,7 @@ export default function MedicationDetailScreen() {
         </View>
 
         <View style={styles.errorContainer}>
-          <Text style={styles.errorIcon}>❌</Text>
+          <MaterialCommunityIcons name="alert-circle" size={64} color="#DC2626" style={styles.errorIcon} />
           <Text style={styles.errorTitle}>Failed to load details</Text>
           <Text style={styles.errorText}>{error}</Text>
           <Button onPress={loadMedicationDetails} style={styles.retryButton}>
@@ -357,7 +357,6 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   errorIcon: {
-    fontSize: 64,
     marginBottom: 16,
   },
   errorTitle: {

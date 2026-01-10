@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useEffect, useState } from "react";
@@ -148,7 +149,7 @@ export default function MedicationSearchScreen() {
     if (error) {
       return (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>❌</Text>
+          <MaterialCommunityIcons name="alert-circle" size={48} color="#DC2626" style={styles.emptyIcon} />
           <Text style={styles.emptyTitle}>{error}</Text>
           <Text style={styles.emptyDescription}>
             Try a different search term
@@ -374,7 +375,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   emptyIcon: {
-    fontSize: 48,
     marginBottom: 16,
   },
   emptyTitle: {

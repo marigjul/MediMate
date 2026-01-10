@@ -1,5 +1,6 @@
 import { Button } from "@/app/components/button";
 import { PrescriptionsStackParamList } from "@/app/types/navigation";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { RouteProp } from "@react-navigation/native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -254,13 +255,14 @@ export default function MedicationConfirmScreen() {
 
           {/* Edit Button */}
           <TouchableOpacity onPress={handleEdit} style={styles.editButton}>
-            <Text style={styles.editButtonText}>✏️ Edit Details</Text>
+            <MaterialCommunityIcons name="pencil" size={18} color="#3B82F6" style={styles.editIcon} />
+            <Text style={styles.editButtonText}>Edit Details</Text>
           </TouchableOpacity>
         </View>
 
         {/* Info Box */}
         <View style={styles.infoBox}>
-          <Text style={styles.infoIcon}>ℹ️</Text>
+          <MaterialCommunityIcons name="information" size={20} color="#1E40AF" style={styles.infoIcon} />
           <Text style={styles.infoText}>
             {isEditMode
               ? "These changes will be saved to your medication schedule."
@@ -387,7 +389,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: "#F3F4F6",
     borderRadius: 8,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+  },
+  editIcon: {
+    marginRight: 8,
   },
   editButtonText: {
     fontSize: 15,
@@ -403,7 +410,6 @@ const styles = StyleSheet.create({
     borderColor: "#BFDBFE",
   },
   infoIcon: {
-    fontSize: 20,
     marginRight: 12,
   },
   infoText: {
