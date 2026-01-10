@@ -88,8 +88,10 @@ const validateScheduleData = (scheduleData) => {
     }
   }
   
-  // Validate refill reminder if present
-  if (scheduleData.refillReminder !== undefined && scheduleData.refillReminder !== null) {
+  // Validate refill reminder if present and is a number (not deleteField or undefined)
+  if (scheduleData.refillReminder !== undefined && 
+      scheduleData.refillReminder !== null && 
+      typeof scheduleData.refillReminder === 'number') {
     if (!Number.isInteger(scheduleData.refillReminder) || scheduleData.refillReminder < 1) {
       errors.push('Refill reminder must be at least 1 day');
     }

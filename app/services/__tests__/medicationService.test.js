@@ -405,5 +405,45 @@ describe("MedicationService - MediMate (Unit Tests)", () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain("Invalid start time");
     });
+
+    test("TC-40: Should allow updating to time-limited without refill reminder validation", async () => {
+      updateDoc.mockResolvedValue();
+
+      // Simulate deleteField() with a special marker object
+      const mockDeleteField = { _methodName: 'FieldValue.delete' };
+
+      const updates = {
+        dosage: "500mg",
+        "schedule.type": "specific_times",
+        "schedule.times": ["09:00", "17:00"],
+        "schedule.frequency": "2x daily",
+        "duration.type": "limited",
+        "duration.days": 14,
+        refillReminder: mockDeleteField, // This should not trigger validation
+      };
+
+      const result = await medicationService.updateMedication("med-123", updates);
+
+      expect(result.success).toBe(true);
+      expect(updateDoc).toHaveBeenCalled();
+    });
+
+    test("TC-41: Should validate refill reminder only when it's a number", async () => {
+      updateDoc.mockResolvedValue();
+
+      const updates = {
+        dosage: "500mg",
+        "schedule.type": "specific_times",
+        "schedule.times": ["09:00"],
+        "schedule.frequency": "1x daily",
+        "duration.type": "permanent",
+        refillReminder: 0, // Invalid number - should fail
+      };
+
+      const result = await medicationService.updateMedication("med-123", updates);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Refill reminder must be at least 1 day");
+    });
   });
 });
