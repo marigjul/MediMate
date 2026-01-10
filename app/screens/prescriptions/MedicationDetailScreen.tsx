@@ -1,6 +1,7 @@
 import { Button } from "@/app/components/button";
 import { medicationService } from "@/app/services/medicationService";
 import { PrescriptionsStackParamList } from "@/app/types/navigation";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { RouteProp } from "@react-navigation/native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -162,20 +163,6 @@ export default function MedicationDetailScreen() {
           </View>
         )}
 
-        {/* Warnings */}
-        {fdaData.warnings && fdaData.warnings.length > 0 && (
-          <View style={[styles.section, styles.warningSection]}>
-            <Text style={[styles.sectionTitle, styles.warningTitle]}>
-              ⚠️ Warnings
-            </Text>
-            {fdaData.warnings.map((warning: string, index: number) => (
-              <Text key={index} style={styles.warningText}>
-                {warning}
-              </Text>
-            ))}
-          </View>
-        )}
-
         {/* Dosage and Administration */}
         {fdaData.dosageAndAdministration && (
           <View style={styles.section}>
@@ -193,6 +180,25 @@ export default function MedicationDetailScreen() {
             {fdaData.sideEffects.map((effect: string, index: number) => (
               <Text key={index} style={styles.sectionText}>
                 • {effect}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {/* Warnings */}
+        {fdaData.warnings && fdaData.warnings.length > 0 && (
+          <View style={styles.warningBox}>
+            <View style={styles.warningHeader}>
+              <MaterialCommunityIcons
+                name="alert-circle"
+                size={24}
+                color="#F59E0B"
+              />
+              <Text style={styles.warningTitle}>Warning</Text>
+            </View>
+            {fdaData.warnings.map((warning: string, index: number) => (
+              <Text key={index} style={styles.warningText}>
+                {warning}
               </Text>
             ))}
           </View>
@@ -306,16 +312,26 @@ const styles = StyleSheet.create({
     color: "#4B5563",
     lineHeight: 22,
   },
-  warningSection: {
-    backgroundColor: "#FEF2F2",
-    borderColor: "#FCA5A5",
+  warningBox: {
+    backgroundColor: "#FEF3C7",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+  },
+  warningHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
   },
   warningTitle: {
-    color: "#DC2626",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#92400E",
   },
   warningText: {
     fontSize: 15,
-    color: "#991B1B",
+    color: "#78350F",
     lineHeight: 22,
     marginBottom: 8,
   },

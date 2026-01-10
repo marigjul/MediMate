@@ -295,92 +295,109 @@ export default function MedicationViewScreen() {
         {/* Information Card */}
         {information && (
           <View style={[styles.card, styles.infoCard]}>
-            <Text style={styles.infoTitle}>Information</Text>
-
-            {/* Purpose */}
-            {information.purpose && (
-              <>
-                <Text style={styles.infoSubtitle}>Purpose</Text>
-                <Text style={styles.infoText}>{information.purpose}</Text>
-              </>
-            )}
-
-            {/* Active Ingredient */}
-            {information.activeIngredient && (
-              <>
-                <Text style={styles.infoSubtitle}>Active Ingredient</Text>
-                <Text style={styles.infoText}>{information.activeIngredient}</Text>
-              </>
-            )}
-
-            {/* Common Side Effects */}
-            {information.sideEffects && (
-              <>
-                <Text style={styles.infoSubtitle}>Common side effects:</Text>
-                <Text style={styles.infoText}>{information.sideEffects}</Text>
-              </>
-            )}
-
-            {/* Do Not Use */}
-            {information.doNotUse && (
-              <>
-                <Text style={styles.infoSubtitle}>Do not use if:</Text>
-                <Text style={styles.infoText}>{information.doNotUse}</Text>
-              </>
-            )}
-
-            {/* Ask Doctor */}
-            {information.askDoctor && (
-              <>
-                <Text style={styles.infoSubtitle}>Ask a doctor before use if:</Text>
-                <Text style={styles.infoText}>{information.askDoctor}</Text>
-              </>
-            )}
-
-            {/* Stop Use */}
-            {information.stopUse && (
-              <>
-                <Text style={styles.infoSubtitle}>Stop use and ask a doctor if:</Text>
-                <Text style={styles.infoText}>{information.stopUse}</Text>
-              </>
-            )}
-
-            {/* Dosage and Administration */}
-            {information.dosageAndAdministration && (
-              <>
-                <Text style={styles.infoSubtitle}>Dosage and Administration</Text>
-                <Text style={styles.infoText}>{information.dosageAndAdministration}</Text>
-              </>
-            )}
-
-            {/* Warning Box - at the bottom */}
-            {information.warnings && (
-              <View style={styles.warningBox}>
+            <View style={styles.infoHeader}>
+              <Text style={styles.infoTitle}>Information</Text>
+              <View style={styles.scrollHint}>
                 <MaterialCommunityIcons
-                  name="alert-circle"
-                  size={20}
-                  color="#F59E0B"
+                  name="chevron-down"
+                  size={16}
+                  color="#9CA3AF"
                 />
-                <View style={styles.warningContent}>
-                  <Text style={styles.warningTitle}>Warning</Text>
+                <Text style={styles.scrollHintText}>Scroll for more</Text>
+              </View>
+            </View>
+            <ScrollView
+              style={styles.infoScrollView}
+              showsVerticalScrollIndicator={true}
+              persistentScrollbar={true}
+              nestedScrollEnabled={true}
+              indicatorStyle="black"
+            >
+              {/* Purpose */}
+              {information.purpose && (
+                <>
+                  <Text style={styles.infoSubtitle}>Purpose</Text>
+                  <Text style={styles.infoText}>{information.purpose}</Text>
+                </>
+              )}
+
+              {/* Active Ingredient */}
+              {information.activeIngredient && (
+                <>
+                  <Text style={styles.infoSubtitle}>Active Ingredient</Text>
+                  <Text style={styles.infoText}>{information.activeIngredient}</Text>
+                </>
+              )}
+
+              {/* Common Side Effects */}
+              {information.sideEffects && (
+                <>
+                  <Text style={styles.infoSubtitle}>Common side effects:</Text>
+                  <Text style={styles.infoText}>{information.sideEffects}</Text>
+                </>
+              )}
+
+              {/* Do Not Use */}
+              {information.doNotUse && (
+                <>
+                  <Text style={styles.infoSubtitle}>Do not use if:</Text>
+                  <Text style={styles.infoText}>{information.doNotUse}</Text>
+                </>
+              )}
+
+              {/* Ask Doctor */}
+              {information.askDoctor && (
+                <>
+                  <Text style={styles.infoSubtitle}>Ask a doctor before use if:</Text>
+                  <Text style={styles.infoText}>{information.askDoctor}</Text>
+                </>
+              )}
+
+              {/* Stop Use */}
+              {information.stopUse && (
+                <>
+                  <Text style={styles.infoSubtitle}>Stop use and ask a doctor if:</Text>
+                  <Text style={styles.infoText}>{information.stopUse}</Text>
+                </>
+              )}
+
+              {/* Dosage and Administration */}
+              {information.dosageAndAdministration && (
+                <>
+                  <Text style={styles.infoSubtitle}>Dosage and Administration</Text>
+                  <Text style={styles.infoText}>{information.dosageAndAdministration}</Text>
+                </>
+              )}
+
+              {/* Warning Box - at the bottom */}
+              {information.warnings && (
+                <View style={styles.warningBox}>
+                  <View style={styles.warningHeader}>
+                    <MaterialCommunityIcons
+                      name="alert-circle"
+                      size={24}
+                      color="#F59E0B"
+                    />
+                    <Text style={styles.warningTitle}>Warning</Text>
+                  </View>
                   <Text style={styles.warningText}>{information.warnings}</Text>
                 </View>
-              </View>
-            )}
+              )}
 
-            {/* No information available message */}
-            {!information.purpose && 
-             !information.activeIngredient && 
-             !information.sideEffects && 
-             !information.warnings && 
-             !information.doNotUse && 
-             !information.askDoctor && 
-             !information.stopUse && 
-             !information.dosageAndAdministration && (
-              <Text style={styles.noInfoText}>
-                No additional information available for this medication.
-              </Text>
-            )}
+              {/* No information available message */}
+              {!information.purpose && 
+               !information.activeIngredient && 
+               !information.sideEffects && 
+               !information.warnings && 
+               !information.doNotUse && 
+               !information.askDoctor && 
+               !information.stopUse && 
+               !information.dosageAndAdministration && (
+                <Text style={styles.noInfoText}>
+                  No additional information available for this medication.
+                </Text>
+              )}
+            </ScrollView>
           </View>
         )}
 
@@ -537,12 +554,36 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     paddingVertical: 24,
+    maxHeight: 500,
+  },
+  infoScrollView: {
+    maxHeight: 400,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: "#FAFAFA",
+  },
+  infoHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
   },
   infoTitle: {
     fontSize: 18,
     fontWeight: "600",
     color: "#1F2937",
-    marginBottom: 16,
+  },
+  scrollHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  scrollHintText: {
+    fontSize: 13,
+    color: "#9CA3AF",
+    fontStyle: "italic",
   },
   infoSubtitle: {
     fontSize: 15,
@@ -563,26 +604,26 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   warningBox: {
-    flexDirection: "row",
     backgroundColor: "#FEF3C7",
     borderRadius: 12,
-    padding: 16,
-    gap: 12,
+    padding: 20,
     marginTop: 8,
   },
-  warningContent: {
-    flex: 1,
+  warningHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
   },
   warningTitle: {
     fontSize: 15,
     fontWeight: "600",
     color: "#92400E",
-    marginBottom: 4,
   },
   warningText: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#78350F",
-    lineHeight: 20,
+    lineHeight: 22,
   },
   editButton: {
     marginTop: 8,
