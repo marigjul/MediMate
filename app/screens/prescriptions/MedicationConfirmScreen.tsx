@@ -300,19 +300,17 @@ export default function MedicationConfirmScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#E0F2FE",
   },
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#E0F2FE",
   },
   header: {
     paddingTop: 20,
     paddingBottom: 20,
     paddingHorizontal: 20,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    backgroundColor: "#E0F2FE",
   },
   backButton: {
     flexDirection: "row",
