@@ -1,6 +1,7 @@
 import { Button } from "@/app/components/button";
 import { medicationService } from "@/app/services/medicationService";
 import { HomeStackParamList, PrescriptionsStackParamList } from "@/app/types/navigation";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { RouteProp } from "@react-navigation/native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -25,7 +26,9 @@ type MedicationScheduleRouteProp =
   | RouteProp<PrescriptionsStackParamList, "MedicationSchedule">
   | RouteProp<HomeStackParamList, "MedicationSchedule">;
 
-const BackIcon = () => <Text style={styles.backIcon}>←</Text>;
+const BackIcon = () => (
+  <MaterialCommunityIcons name="chevron-left" size={28} color="#3B82F6" />
+);
 const PlusIcon = () => <Text style={styles.plusIcon}>+</Text>;
 const MinusIcon = () => <Text style={styles.minusIcon}>−</Text>;
 
@@ -579,11 +582,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  backIcon: {
-    fontSize: 24,
-    color: "#3B82F6",
-    marginRight: 4,
-  },
+
   backText: {
     fontSize: 16,
     color: "#3B82F6",

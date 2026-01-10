@@ -26,7 +26,9 @@ type MedicationDetailRouteProp = RouteProp<
   "MedicationDetail"
 >;
 
-const BackIcon = () => <Text style={styles.backIcon}>←</Text>;
+const BackIcon = () => (
+  <MaterialCommunityIcons name="chevron-left" size={28} color="#3B82F6" />
+);
 
 export default function MedicationDetailScreen() {
   const navigation = useNavigation<MedicationDetailNavigationProp>();
@@ -252,11 +254,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  backIcon: {
-    fontSize: 24,
-    color: "#3B82F6",
-    marginRight: 4,
-  },
+
   backText: {
     fontSize: 16,
     color: "#3B82F6",
