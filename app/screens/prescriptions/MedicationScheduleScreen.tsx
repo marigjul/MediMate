@@ -26,6 +26,29 @@ type MedicationScheduleRouteProp =
   | RouteProp<PrescriptionsStackParamList, "MedicationSchedule">
   | RouteProp<HomeStackParamList, "MedicationSchedule">;
 
+// Time validation utilities
+const isValidTime = (time: string): boolean => {
+  if (!time || !time.match(/^\d{2}:\d{2}$/)) {
+    return false;
+  }
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60;
+};
+
+const formatTimeInput = (input: string): string => {
+  // Remove non-numeric characters except colon
+  let cleaned = input.replace(/[^0-9:]/g, '');
+  
+  // Auto-format as user types
+  if (cleaned.length === 2 && !cleaned.includes(':')) {
+    cleaned = cleaned + ':';
+  } else if (cleaned.length > 5) {
+    cleaned = cleaned.substring(0, 5);
+  }
+  
+  return cleaned;
+};
+
 const BackIcon = () => (
   <MaterialCommunityIcons name="chevron-left" size={28} color="#3B82F6" />
 );
@@ -83,28 +106,21 @@ export default function MedicationScheduleScreen() {
 
   const handleAddTime = () => {
     if (times.length < 6) {
-      // Get the last time, default to "09:00" if empty or invalid
+      // Get the last valid time, default to "09:00" if empty or invalid
       const lastTime = times[times.length - 1] || "09:00";
-      const timeParts = lastTime.split(":");
-
-      // Ensure we have valid time parts
-      if (timeParts.length === 2) {
-        const [hours, minutes] = timeParts.map(Number);
-
-        // Check if hours and minutes are valid numbers
-        if (!isNaN(hours) && !isNaN(minutes)) {
-          let newHours = hours + 4;
-          if (newHours >= 24) newHours -= 24;
-          const newTime = `${newHours.toString().padStart(2, "0")}:${minutes
-            .toString()
-            .padStart(2, "0")}`;
-          setTimes([...times, newTime]);
-          return;
-        }
+      
+      if (isValidTime(lastTime)) {
+        const [hours, minutes] = lastTime.split(":").map(Number);
+        let newHours = hours + 4;
+        if (newHours >= 24) newHours -= 24;
+        const newTime = `${newHours.toString().padStart(2, "0")}:${minutes
+          .toString()
+          .padStart(2, "0")}`;
+        setTimes([...times, newTime]);
+      } else {
+        // If last time is invalid, default to "09:00"
+        setTimes([...times, "09:00"]);
       }
-
-      // If we couldn't parse the last time, default to "09:00"
-      setTimes([...times, "09:00"]);
     }
   };
 
@@ -115,8 +131,9 @@ export default function MedicationScheduleScreen() {
   };
 
   const handleTimeChange = (index: number, value: string) => {
+    const formattedValue = formatTimeInput(value);
     const newTimes = [...times];
-    newTimes[index] = value;
+    newTimes[index] = formattedValue;
     setTimes(newTimes);
   };
 
@@ -129,8 +146,8 @@ export default function MedicationScheduleScreen() {
     }
 
     if (scheduleType === "interval") {
-      if (!startTime.match(/^\d{2}:\d{2}$/)) {
-        setError("Please enter start time in HH:MM format (e.g., 09:00)");
+      if (!isValidTime(startTime)) {
+        setError("Please enter a valid start time (00:00 - 23:59)");
         return false;
       }
 
@@ -159,9 +176,25 @@ export default function MedicationScheduleScreen() {
       }
     }
 
-    if (scheduleType === "specific_times" && times.length === 0) {
-      setError("Please add at least one time");
-      return false;
+    if (scheduleType === "specific_times") {
+      if (times.length === 0) {
+        setError("Please add at least one time");
+        return false;
+      }
+      
+      // Validate all times are in correct format
+      const invalidTimes = times.filter(time => !isValidTime(time));
+      if (invalidTimes.length > 0) {
+        setError("Please enter all times in valid format (00:00 - 23:59)");
+        return false;
+      }
+      
+      // Check for duplicate times
+      const uniqueTimes = new Set(times);
+      if (uniqueTimes.size !== times.length) {
+        setError("Please remove duplicate times");
+        return false;
+      }
     }
 
     if (
@@ -385,14 +418,16 @@ export default function MedicationScheduleScreen() {
             <View style={styles.formSection}>
               <Text style={styles.label}>Start Time *</Text>
               <Text style={styles.helperText}>
-                When do you take the first dose?
+                When do you take the first dose? (HH:MM format)
               </Text>
               <TextInput
                 style={styles.input}
                 value={startTime}
-                onChangeText={setStartTime}
-                placeholder="e.g. 09:00"
+                onChangeText={(text) => setStartTime(formatTimeInput(text))}
+                placeholder="09:00"
                 placeholderTextColor="#9CA3AF"
+                keyboardType="numbers-and-punctuation"
+                maxLength={5}
               />
             </View>
 
@@ -430,7 +465,7 @@ export default function MedicationScheduleScreen() {
         {scheduleType === "specific_times" && (
           <View style={styles.formSection}>
             <Text style={styles.label}>Times *</Text>
-            <Text style={styles.helperText}>Add up to 6 times per day</Text>
+            <Text style={styles.helperText}>Add up to 6 times per day (HH:MM format)</Text>
             {times.map((time, index) => (
               <View key={index} style={styles.timeRow}>
                 <TextInput
@@ -439,6 +474,8 @@ export default function MedicationScheduleScreen() {
                   onChangeText={(value) => handleTimeChange(index, value)}
                   placeholder="09:00"
                   placeholderTextColor="#9CA3AF"
+                  keyboardType="numbers-and-punctuation"
+                  maxLength={5}
                 />
                 {times.length > 1 && (
                   <TouchableOpacity
