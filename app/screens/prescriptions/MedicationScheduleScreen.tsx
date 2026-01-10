@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Support navigation from both Home and Prescriptions stacks
 type MedicationScheduleNavigationProp = 
@@ -302,7 +303,8 @@ export default function MedicationScheduleScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
@@ -554,17 +556,22 @@ export default function MedicationScheduleScreen() {
 
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+  },
   container: {
     flex: 1,
     backgroundColor: "#F9FAFB",
   },
   header: {
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 20,
     paddingHorizontal: 20,
     backgroundColor: "#FFFFFF",

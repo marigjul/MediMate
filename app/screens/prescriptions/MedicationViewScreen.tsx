@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from "../../components/button";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { useAuth } from "../../contexts/AuthContext";
@@ -168,7 +169,8 @@ export default function MedicationViewScreen() {
   const isPermanent = medication.duration?.type === "permanent";
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -414,11 +416,16 @@ export default function MedicationViewScreen() {
         onCancel={() => setShowDeleteModal(false)}
         destructive={true}
       />
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#E0F2FE",
+  },
   container: {
     flex: 1,
     backgroundColor: "#E0F2FE",
@@ -428,7 +435,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingTop: 60,
     paddingBottom: 40,
   },
   backButton: {

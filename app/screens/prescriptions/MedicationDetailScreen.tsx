@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type MedicationDetailNavigationProp = NativeStackNavigationProp<
   PrescriptionsStackParamList,
@@ -77,16 +78,17 @@ export default function MedicationDetailScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer} edges={['top']}>
         <ActivityIndicator size="large" color="#3B82F6" />
         <Text style={styles.loadingText}>Loading medication details...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (error || !fdaData) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <BackIcon />
@@ -103,12 +105,14 @@ export default function MedicationDetailScreen() {
             Retry
           </Button>
         </View>
-      </View>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
@@ -208,11 +212,16 @@ export default function MedicationDetailScreen() {
           Continue to Schedule
         </Button>
       </View>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+  },
   container: {
     flex: 1,
     backgroundColor: "#F9FAFB",
@@ -229,7 +238,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   header: {
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 20,
     paddingHorizontal: 20,
     backgroundColor: "#FFFFFF",

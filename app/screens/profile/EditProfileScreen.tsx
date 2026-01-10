@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/button';
 import { Card, CardContent } from '../../components/card';
 import { useAuth } from '../../contexts/AuthContext';
@@ -120,7 +121,8 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#111827" />
@@ -230,11 +232,16 @@ export default function EditProfileScreen() {
           )}
         </Button>
       </ScrollView>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#E0F2FE',
+  },
   container: {
     flex: 1,
     backgroundColor: '#E0F2FE',
@@ -244,7 +251,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 16,
     backgroundColor: '#E0F2FE',
     borderBottomWidth: 0,

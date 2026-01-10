@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/card';
 import { authService } from '../services/authService';
 
@@ -117,10 +118,11 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>MediMate</Text>
@@ -215,11 +217,16 @@ export default function LoginScreen() {
           </CardContent>
         </Card>
       </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#E0F2FE',
+  },
   container: {
     flex: 1,
     backgroundColor: '#E0F2FE',

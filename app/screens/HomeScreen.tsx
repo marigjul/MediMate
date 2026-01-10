@@ -3,6 +3,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from "../components/button";
 import { Card, CardContent } from "../components/card";
 import { useAuth } from "../contexts/AuthContext";
@@ -298,16 +299,17 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer} edges={['top']}>
         <ActivityIndicator size="large" color="#3B82F6" />
         <Text style={styles.loadingText}>Loading today's schedule...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView style={styles.container}>
+        <View style={styles.content}>
         {/* Greeting */}
         <Text style={styles.greeting}>
           {getGreeting()}{user?.displayName ? `, ${user.displayName}` : ''}!
@@ -387,6 +389,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         ))}
       </View>
+      </ScrollView>
 
       {/* Status Change Modal */}
       <Modal
@@ -475,11 +478,15 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#E0F2FE",
+  },
   container: {
     flex: 1,
     backgroundColor: "#E0F2FE",
