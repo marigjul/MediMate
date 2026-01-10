@@ -98,7 +98,6 @@ export default function EditProfileScreen() {
       }
 
       if (!hasError) {
-        setSuccess('Profile updated successfully!');
         // Clear password fields
         setCurrentPassword('');
         setNewPassword('');
@@ -107,10 +106,8 @@ export default function EditProfileScreen() {
         // Refresh user data in context
         await refreshUser();
         
-        // Navigate back after a short delay
-        setTimeout(() => {
+        // Navigate back immediately
           navigation.goBack();
-        }, 1100);
       }
     } catch (error) {
       console.error('Error updating profile:', error);
