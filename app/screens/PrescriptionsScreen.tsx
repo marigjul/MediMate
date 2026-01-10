@@ -336,16 +336,12 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 8,
-    backgroundColor: "#E0F2FE",
-    padding: 20,
-    borderRadius: 12,
-    marginHorizontal: -20,
-    marginTop: -10,
   },
   title: {
     fontSize: 32,
     fontWeight: "700",
     color: "#1E40AF",
+    marginBottom: 24,
   },
   addButton: {
     marginBottom: 18,
