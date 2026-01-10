@@ -83,10 +83,10 @@ describe('EditProfileScreen', () => {
     });
   });
 
-  it('should show success message after successful name update', async () => {
+  it('should navigate back after successful name update', async () => {
     (authService.updateUserProfile as jest.Mock).mockResolvedValue({ success: true });
 
-    const { getByDisplayValue, getByText } = renderEditProfileScreen();
+    const { getByDisplayValue, getByText, queryByText } = renderEditProfileScreen();
     
     const nameInput = getByDisplayValue('John Doe');
     fireEvent.changeText(nameInput, 'Jane Smith');
@@ -95,8 +95,15 @@ describe('EditProfileScreen', () => {
     fireEvent.press(saveButton);
     
     await waitFor(() => {
-      expect(getByText('Profile updated successfully!')).toBeTruthy();
+      expect(authService.updateUserProfile).toHaveBeenCalledWith('test-user-123', {
+        name: 'Jane Smith',
+        displayName: 'Jane Smith',
+      });
+      expect(mockAuthContextValue.refreshUser).toHaveBeenCalled();
     });
+    
+    // Verify no error message is shown
+    expect(queryByText(/error/i)).toBeNull();
   });
 
   it('should allow updating password with valid inputs', async () => {
