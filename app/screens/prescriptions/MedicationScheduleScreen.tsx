@@ -255,7 +255,6 @@ export default function MedicationScheduleScreen() {
           setError(result.error || "Failed to update medication");
         }
       } catch (err) {
-        console.error("Error updating medication:", err);
         setError("An error occurred while updating medication");
       } finally {
         setIsUpdating(false);

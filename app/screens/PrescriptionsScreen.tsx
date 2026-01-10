@@ -79,12 +79,10 @@ export default function PrescriptionsScreen() {
       if (result.success) {
         setMedications(result.medications || []);
       } else {
-        console.error("Failed to load medications:", result.error);
         setError(result.error || "Failed to load medications");
         setMedications([]);
       }
     } catch (error) {
-      console.error("Error loading medications:", error);
       setError("An unexpected error occurred");
       setMedications([]);
     } finally {

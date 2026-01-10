@@ -53,7 +53,6 @@ export default function MedicationDetailScreen() {
 
       setFdaData(result.data);
     } catch (err) {
-      console.error("Error loading medication details:", err);
       setError("Failed to load medication details");
     } finally {
       setLoading(false);

@@ -33,14 +33,10 @@ export default function ProfileScreen() {
     try {
       const result = await authService.logout();
       if (!result.success) {
-        console.error('Logout failed:', result.error);
         alert('Failed to logout. Please try again.');
         setLoggingOut(false);
       }
-      // On success, AuthContext will automatically redirect to LoginScreen
-      // No need to manually navigate
     } catch (error) {
-      console.error('Logout error:', error);
       alert('An error occurred during logout.');
       setLoggingOut(false);
     }

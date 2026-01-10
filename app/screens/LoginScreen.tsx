@@ -64,12 +64,10 @@ export default function LoginScreen() {
       if (!result.success) {
         const errorMessage = getErrorMessage(result.error || '');
         setError(errorMessage);
-        console.error('Login failed:', result.error);
       }
       // No need to navigate - AuthContext will handle it automatically
     } catch (error) {
       setError('An unexpected error occurred');
-      console.error('Login error:', error);
     } finally {
       setLoading(false);
     }
@@ -98,11 +96,9 @@ export default function LoginScreen() {
       if (!result.success) {
         const errorMessage = getErrorMessage(result.error || '');
         setError(errorMessage);
-        console.error('Sign up failed:', result.error);
       }
     } catch (error) {
       setError('An unexpected error occurred');
-      console.error('Sign up error:', error);
     } finally {
       setLoading(false);
     }

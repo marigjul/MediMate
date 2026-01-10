@@ -60,11 +60,7 @@ export default function MedicationSearchScreen() {
       setLoading(true);
       setError("");
 
-      console.log("Searching for:", query);
-
       const result = await medicationService.searchMedicationSuggestions(query);
-
-      console.log("Search result:", result);
 
       if (!result.success) {
         setError(result.error || "Failed to search medications");
@@ -78,10 +74,8 @@ export default function MedicationSearchScreen() {
         return;
       }
 
-      console.log("Setting results:", result.data.length, "medications");
       setResults(result.data);
     } catch (err) {
-      console.error("Search error:", err);
       setError("Failed to search. Please try again.");
       setResults([]);
     } finally {
@@ -90,8 +84,6 @@ export default function MedicationSearchScreen() {
   };
 
   const handleMedicationSelect = (medication: MedicationResult) => {
-    console.log("Selected medication:", medication);
-
     navigation.navigate("MedicationDetail", {
       medicationName: medication.brandName,
       brandName: medication.brandName,

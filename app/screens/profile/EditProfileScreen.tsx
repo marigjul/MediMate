@@ -110,7 +110,6 @@ export default function EditProfileScreen() {
           navigation.goBack();
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);

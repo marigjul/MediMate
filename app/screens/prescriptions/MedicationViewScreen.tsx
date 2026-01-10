@@ -78,11 +78,9 @@ export default function MedicationViewScreen() {
         setShowDeleteModal(false);
         navigation.goBack();
       } else {
-        console.error("Failed to delete medication:", result.error);
         alert("Failed to delete medication. Please try again.");
       }
     } catch (error) {
-      console.error("Error deleting medication:", error);
       alert("An error occurred. Please try again.");
     } finally {
       setIsDeleting(false);

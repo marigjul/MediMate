@@ -87,14 +87,12 @@ export default function HomeScreen() {
     try {
       setLoading(true);
       const today = medicationService.getTodayDateString();
-      console.log('[HomeScreen] Loading medications for:', today);
       
       // Reset statuses if it's a new day
       await medicationService.resetDailyStatuses(user.uid);
       
       // Get user medications
       const result = await medicationService.getUserMedications(user.uid);
-      console.log('[HomeScreen] Got', result.medications?.length || 0, 'medications');
 
       if (result.success && result.medications) {
         // Generate today's schedule from medications with their status
@@ -127,7 +125,6 @@ export default function HomeScreen() {
         setMedications([]);
       }
     } catch (error) {
-      console.error("Error loading medications:", error);
       setMedications([]);
     } finally {
       setLoading(false);
@@ -209,7 +206,6 @@ export default function HomeScreen() {
     
     medications.forEach(med => {
       if (med.status === 'pending' && isMedicationMissed(med.time)) {
-        console.log('[HomeScreen] Auto-marking as missed:', med.name, med.time);
         updates.push(
           medicationService.updateMedicationTimeStatus(
             med.medicationId,
@@ -248,12 +244,6 @@ export default function HomeScreen() {
   // Confirm status change
   const confirmStatusChange = async () => {
     if (selectedMedication && selectedStatus) {
-      console.log('[HomeScreen] Updating status:', {
-        medicationId: selectedMedication.medicationId,
-        time: selectedMedication.time,
-        newStatus: selectedStatus
-      });
-
       // Update local state optimistically
       setMedications(prev => prev.map(med => 
         med.id === selectedMedication.id 
@@ -269,11 +259,8 @@ export default function HomeScreen() {
       );
 
       if (!result.success) {
-        console.error("Failed to update medication status:", result.error);
         // Revert optimistic update on error
         await loadTodaysMedications();
-      } else {
-        console.log('[HomeScreen] Status updated successfully');
       }
     }
     setModalVisible(false);
