@@ -24,15 +24,11 @@ export const medicationService = {
         return { success: false, error: "Search term too short" };
       }
 
-      console.log("Searching FDA for suggestions:", searchTerm);
-
       const cleanTerm = searchTerm.trim().toLowerCase();
 
       // Search both brand_name and generic_name
       const searchQuery = `(openfda.brand_name:*${cleanTerm}* OR openfda.generic_name:*${cleanTerm}*)`;
       const encodedQuery = encodeURIComponent(searchQuery);
-
-      console.log("FDA Query:", searchQuery);
 
       const response = await fetch(
         `${FDA_API_URL}?search=${encodedQuery}&limit=20`
@@ -40,14 +36,12 @@ export const medicationService = {
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.log("No results found for:", cleanTerm);
           return { success: true, data: [] };
         }
         throw new Error(`FDA API error: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("FDA API returned:", data.results?.length || 0, "results");
 
       if (!data.results || data.results.length === 0) {
         return { success: true, data: [] };
@@ -66,10 +60,8 @@ export const medicationService = {
           index === self.findIndex((m) => m.brandName === med.brandName)
       );
 
-      console.log("Returning", uniqueSuggestions.length, "unique suggestions");
       return { success: true, data: uniqueSuggestions };
     } catch (error) {
-      console.error("Medication search error:", error);
       return { success: false, error: error.message };
     }
   },
@@ -91,13 +83,11 @@ export const medicationService = {
 
         // If cache is newer than 30 days, return cached data
         if (cacheAge < maxAge) {
-          console.log("Using cached FDA data");
           return { success: true, data: cachedData.fdaData, fromCache: true };
         }
       }
 
       // Step 2: If not in cache or outdated, fetch from FDA API
-      console.log("Fetching from FDA API...");
       const response = await fetch(
         `${FDA_API_URL}?search=openfda.brand_name:"${medicationName}"&limit=1`
       );
@@ -138,7 +128,6 @@ export const medicationService = {
 
       return { success: true, data: fdaData, fromCache: false };
     } catch (error) {
-      console.error("FDA API Error:", error);
       return { success: false, error: error.message };
     }
   },
@@ -278,7 +267,6 @@ export const medicationService = {
   // Update status for a specific medication time
   updateMedicationTimeStatus: async (medicationId, time, status) => {
     try {
-      console.log('[updateMedicationTimeStatus]', { medicationId, time, status });
       const today = medicationService.getTodayDateString();
       const medicationRef = doc(db, "medications", medicationId);
       
@@ -290,10 +278,8 @@ export const medicationService = {
       };
       
       await updateDoc(medicationRef, updateData);
-      console.log('[updateMedicationTimeStatus] Updated successfully');
       return { success: true };
     } catch (error) {
-      console.error('[updateMedicationTimeStatus] Error:', error);
       return { success: false, error: error.message };
     }
   },
@@ -333,7 +319,6 @@ export const medicationService = {
       await Promise.all(updates);
       return { success: true };
     } catch (error) {
-      console.error('[resetDailyStatuses] Error:', error);
       return { success: false, error: error.message };
     }
   },
@@ -362,7 +347,6 @@ export const medicationService = {
   // Get or create daily log for a specific date
   getDailyLog: async (userId, date) => {
     try {
-      console.log('[getDailyLog] Fetching log for:', userId, date);
       const q = query(
         collection(db, "dailyLogs"),
         where("userId", "==", userId),
@@ -372,7 +356,6 @@ export const medicationService = {
 
       if (!snapshot.empty) {
         const docData = snapshot.docs[0].data();
-        console.log('[getDailyLog] Found existing log with', docData.medications?.length || 0, 'medications');
         return {
           success: true,
           log: {
@@ -383,7 +366,6 @@ export const medicationService = {
       }
 
       // If no log exists for this date, return empty log structure
-      console.log('[getDailyLog] No log found, returning empty structure');
       return {
         success: true,
         log: {
@@ -393,7 +375,6 @@ export const medicationService = {
         },
       };
     } catch (error) {
-      console.error("Error getting daily log:", error);
       return { success: false, error: error.message };
     }
   },
@@ -401,11 +382,9 @@ export const medicationService = {
   // Initialize daily log with all medications for the day
   initializeDailyLog: async (userId, date, medications) => {
     try {
-      console.log('[initializeDailyLog] Initializing log for:', userId, date);
       // Check if log already exists
       const existingLog = await medicationService.getDailyLog(userId, date);
       if (existingLog.log && 'id' in existingLog.log && existingLog.log.id) {
-        console.log('[initializeDailyLog] Log already exists, returning it');
         return { success: true, log: existingLog.log };
       }
 
@@ -422,7 +401,6 @@ export const medicationService = {
         });
       });
 
-      console.log('[initializeDailyLog] Creating new daily log with', medicationEntries.length, 'entries');
       const docRef = await addDoc(collection(db, "dailyLogs"), {
         userId,
         date,
@@ -431,7 +409,6 @@ export const medicationService = {
         updatedAt: serverTimestamp(),
       });
 
-      console.log('[initializeDailyLog] Daily log created with ID:', docRef.id);
       return {
         success: true,
         log: {
@@ -442,7 +419,6 @@ export const medicationService = {
         },
       };
     } catch (error) {
-      console.error("Error initializing daily log:", error);
       return { success: false, error: error.message };
     }
   },
@@ -456,7 +432,6 @@ export const medicationService = {
     status
   ) => {
     try {
-      console.log('[updateMedicationStatus] Updating:', { userId, date, medicationId, scheduledTime, status });
       // Get the daily log
       const q = query(
         collection(db, "dailyLogs"),
@@ -500,29 +475,24 @@ export const medicationService = {
 
       if (logId) {
         // Update existing document
-        console.log('[updateMedicationStatus] Updating existing log:', logId);
         const logRef = doc(db, "dailyLogs", logId);
         await updateDoc(logRef, {
           medications,
           updatedAt: serverTimestamp(),
         });
-        console.log('[updateMedicationStatus] Successfully updated log');
       } else {
         // Create new document
-        console.log('[updateMedicationStatus] Creating new log document');
-        const newDoc = await addDoc(collection(db, "dailyLogs"), {
+        await addDoc(collection(db, "dailyLogs"), {
           userId,
           date,
           medications,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
-        console.log('[updateMedicationStatus] Created new log:', newDoc.id);
       }
 
       return { success: true };
     } catch (error) {
-      console.error("Error updating medication status:", error);
       return { success: false, error: error.message };
     }
   },
@@ -530,7 +500,6 @@ export const medicationService = {
   // Check previous day's completion and update streaks
   checkAndUpdateStreaks: async (userId) => {
     try {
-      console.log('[checkAndUpdateStreaks] Starting streak check for user:', userId);
       const yesterday = medicationService.getYesterdayDateString();
       const today = medicationService.getTodayDateString();
 
@@ -539,8 +508,6 @@ export const medicationService = {
       if (!medsResult.success) {
         return { success: false, error: "Could not fetch medications" };
       }
-
-      console.log('[checkAndUpdateStreaks] Checking', medsResult.medications.length, 'medications');
 
       // Check each medication's completion status for yesterday
       const updates = [];
@@ -556,8 +523,6 @@ export const medicationService = {
           const currentStreak = med.streak || 0;
           const newStreak = allTaken ? currentStreak + 1 : 0;
 
-          console.log('[checkAndUpdateStreaks]', med.medicationName, '- All taken:', allTaken, '- Old streak:', currentStreak, '- New streak:', newStreak);
-
           if (newStreak !== currentStreak) {
             updates.push(
               medicationService.updateMedication(med.id, { streak: newStreak })
@@ -565,7 +530,6 @@ export const medicationService = {
           }
         } else if (med.statusDate !== today && med.statusDate !== yesterday) {
           // If status is from an older date (user didn't use app yesterday), reset streak
-          console.log('[checkAndUpdateStreaks]', med.medicationName, '- Status from old date, resetting streak');
           if (med.streak !== 0) {
             updates.push(
               medicationService.updateMedication(med.id, { streak: 0 })
@@ -577,9 +541,6 @@ export const medicationService = {
       // Execute all streak updates
       if (updates.length > 0) {
         await Promise.all(updates);
-        console.log('[checkAndUpdateStreaks] Updated', updates.length, 'streaks');
-      } else {
-        console.log('[checkAndUpdateStreaks] No streak updates needed');
       }
 
       return {
@@ -588,7 +549,6 @@ export const medicationService = {
         processedDate: yesterday,
       };
     } catch (error) {
-      console.error("Error checking and updating streaks:", error);
       return { success: false, error: error.message };
     }
   },

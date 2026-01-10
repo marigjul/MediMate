@@ -1,6 +1,7 @@
 import { Button } from "@/app/components/button";
 import { medicationService } from "@/app/services/medicationService";
 import { PrescriptionsStackParamList } from "@/app/types/navigation";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { RouteProp } from "@react-navigation/native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -13,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type MedicationDetailNavigationProp = NativeStackNavigationProp<
   PrescriptionsStackParamList,
@@ -51,7 +53,6 @@ export default function MedicationDetailScreen() {
 
       setFdaData(result.data);
     } catch (err) {
-      console.error("Error loading medication details:", err);
       setError("Failed to load medication details");
     } finally {
       setLoading(false);
@@ -77,16 +78,17 @@ export default function MedicationDetailScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer} edges={['top']}>
         <ActivityIndicator size="large" color="#3B82F6" />
         <Text style={styles.loadingText}>Loading medication details...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (error || !fdaData) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <BackIcon />
@@ -96,19 +98,21 @@ export default function MedicationDetailScreen() {
         </View>
 
         <View style={styles.errorContainer}>
-          <Text style={styles.errorIcon}>❌</Text>
+          <MaterialCommunityIcons name="alert-circle" size={64} color="#DC2626" style={styles.errorIcon} />
           <Text style={styles.errorTitle}>Failed to load details</Text>
           <Text style={styles.errorText}>{error}</Text>
           <Button onPress={loadMedicationDetails} style={styles.retryButton}>
             Retry
           </Button>
         </View>
-      </View>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
@@ -158,20 +162,6 @@ export default function MedicationDetailScreen() {
           </View>
         )}
 
-        {/* Warnings */}
-        {fdaData.warnings && fdaData.warnings.length > 0 && (
-          <View style={[styles.section, styles.warningSection]}>
-            <Text style={[styles.sectionTitle, styles.warningTitle]}>
-              ⚠️ Warnings
-            </Text>
-            {fdaData.warnings.map((warning: string, index: number) => (
-              <Text key={index} style={styles.warningText}>
-                {warning}
-              </Text>
-            ))}
-          </View>
-        )}
-
         {/* Dosage and Administration */}
         {fdaData.dosageAndAdministration && (
           <View style={styles.section}>
@@ -194,6 +184,25 @@ export default function MedicationDetailScreen() {
           </View>
         )}
 
+        {/* Warnings */}
+        {fdaData.warnings && fdaData.warnings.length > 0 && (
+          <View style={styles.warningBox}>
+            <View style={styles.warningHeader}>
+              <MaterialCommunityIcons
+                name="alert-circle"
+                size={24}
+                color="#F59E0B"
+              />
+              <Text style={styles.warningTitle}>Warning</Text>
+            </View>
+            {fdaData.warnings.map((warning: string, index: number) => (
+              <Text key={index} style={styles.warningText}>
+                {warning}
+              </Text>
+            ))}
+          </View>
+        )}
+
         <View style={styles.bottomPadding} />
       </ScrollView>
 
@@ -208,20 +217,25 @@ export default function MedicationDetailScreen() {
           Continue to Schedule
         </Button>
       </View>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#E0F2FE",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#E0F2FE",
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#E0F2FE",
   },
   loadingText: {
     marginTop: 12,
@@ -229,12 +243,9 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   header: {
-    paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 20,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    backgroundColor: "#E0F2FE",
   },
   backButton: {
     flexDirection: "row",
@@ -299,16 +310,26 @@ const styles = StyleSheet.create({
     color: "#4B5563",
     lineHeight: 22,
   },
-  warningSection: {
-    backgroundColor: "#FEF2F2",
-    borderColor: "#FCA5A5",
+  warningBox: {
+    backgroundColor: "#FEF3C7",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+  },
+  warningHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
   },
   warningTitle: {
-    color: "#DC2626",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#92400E",
   },
   warningText: {
     fontSize: 15,
-    color: "#991B1B",
+    color: "#78350F",
     lineHeight: 22,
     marginBottom: 8,
   },
@@ -335,7 +356,6 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   errorIcon: {
-    fontSize: 64,
     marginBottom: 16,
   },
   errorTitle: {

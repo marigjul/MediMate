@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useEffect, useState } from "react";
@@ -12,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { medicationService } from "../../services/medicationService";
 import type { PrescriptionsStackParamList } from "../../types/navigation";
 
@@ -58,11 +60,7 @@ export default function MedicationSearchScreen() {
       setLoading(true);
       setError("");
 
-      console.log("Searching for:", query);
-
       const result = await medicationService.searchMedicationSuggestions(query);
-
-      console.log("Search result:", result);
 
       if (!result.success) {
         setError(result.error || "Failed to search medications");
@@ -76,10 +74,8 @@ export default function MedicationSearchScreen() {
         return;
       }
 
-      console.log("Setting results:", result.data.length, "medications");
       setResults(result.data);
     } catch (err) {
-      console.error("Search error:", err);
       setError("Failed to search. Please try again.");
       setResults([]);
     } finally {
@@ -88,8 +84,6 @@ export default function MedicationSearchScreen() {
   };
 
   const handleMedicationSelect = (medication: MedicationResult) => {
-    console.log("Selected medication:", medication);
-
     navigation.navigate("MedicationDetail", {
       medicationName: medication.brandName,
       brandName: medication.brandName,
@@ -147,7 +141,7 @@ export default function MedicationSearchScreen() {
     if (error) {
       return (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>❌</Text>
+          <MaterialCommunityIcons name="alert-circle" size={48} color="#DC2626" style={styles.emptyIcon} />
           <Text style={styles.emptyTitle}>{error}</Text>
           <Text style={styles.emptyDescription}>
             Try a different search term
@@ -160,10 +154,11 @@ export default function MedicationSearchScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
@@ -225,17 +220,21 @@ export default function MedicationSearchScreen() {
         ListEmptyComponent={renderEmptyState}
         keyboardShouldPersistTaps="handled"
       />
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#E0F2FE",
+  },
   container: {
     flex: 1,
     backgroundColor: "#E0F2FE",
   },
   header: {
-    paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 20,
     backgroundColor: "#E0F2FE",
@@ -368,7 +367,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   emptyIcon: {
-    fontSize: 48,
     marginBottom: 16,
   },
   emptyTitle: {

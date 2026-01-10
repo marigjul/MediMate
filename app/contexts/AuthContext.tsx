@@ -54,14 +54,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      console.log('Checking streaks for new day:', today);
       const result = await medicationService.checkAndUpdateStreaks(userId);
       if (result.success) {
         setLastStreakCheck(today);
-        console.log('Streaks updated successfully');
       }
     } catch (error) {
-      console.error('Error checking streaks:', error);
+      // Silently handle error
     }
   };
 

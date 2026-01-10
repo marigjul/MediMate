@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from "../components/button";
 import { Card, CardContent, CardHeader } from "../components/card";
 import ConfirmationModal from "../components/ConfirmationModal";
@@ -32,14 +33,10 @@ export default function ProfileScreen() {
     try {
       const result = await authService.logout();
       if (!result.success) {
-        console.error('Logout failed:', result.error);
         alert('Failed to logout. Please try again.');
         setLoggingOut(false);
       }
-      // On success, AuthContext will automatically redirect to LoginScreen
-      // No need to manually navigate
     } catch (error) {
-      console.error('Logout error:', error);
       alert('An error occurred during logout.');
       setLoggingOut(false);
     }
@@ -50,7 +47,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.scrollView}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
         {/* Page Header */}
         <Text style={styles.pageTitle}>Your Profile</Text>
@@ -96,11 +94,16 @@ export default function ProfileScreen() {
         onCancel={handleLogoutCancel}
         destructive
       />
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#E0F2FE',
+  },
   scrollView: {
     flex: 1,
     backgroundColor: "#E0F2FE",

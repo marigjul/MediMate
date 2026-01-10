@@ -144,7 +144,7 @@ describe("MedicationConfirmScreen", () => {
 
     it("TC-99: Should render Edit button", () => {
       const { getByText } = renderConfirmScreen();
-      expect(getByText("✏️ Edit Details")).toBeTruthy();
+      expect(getByText("Edit Details")).toBeTruthy();
     });
   });
 
@@ -403,7 +403,7 @@ describe("MedicationConfirmScreen", () => {
     it("TC-112: Should navigate back when Edit Schedule button pressed", () => {
       const { getByText } = renderConfirmScreen();
 
-      const editButton = getByText("✏️ Edit Details");
+      const editButton = getByText("Edit Details");
       fireEvent.press(editButton);
 
       expect(mockGoBack).toHaveBeenCalled();

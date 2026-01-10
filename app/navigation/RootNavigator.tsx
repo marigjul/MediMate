@@ -87,14 +87,24 @@ function MainNavigator() {
         headerShown: false,
         tabBarActiveTintColor: '#2563EB',
         tabBarInactiveTintColor: '#9CA3AF',
+        tabBarStyle: {
+          height: 80,
+          paddingBottom: 15,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 13,
+          fontWeight: '600',
+          marginTop: 4,
+        },
       }}
     >
       <MainTab.Screen
         name="Home"
         component={HomeNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="home" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="home" size={28} color={color} />
           ),
         }}
         listeners={({ navigation }) => ({
@@ -113,8 +123,8 @@ function MainNavigator() {
         name="Prescriptions"
         component={PrescriptionsNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="pill" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="pill" size={28} color={color} />
           ),
         }}
         listeners={({ navigation }) => ({
@@ -133,8 +143,8 @@ function MainNavigator() {
         name="Profile"
         component={ProfileNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="account" size={28} color={color} />
           ),
         }}
         listeners={({ navigation }) => ({

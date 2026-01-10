@@ -1,24 +1,25 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from "../components/button";
 import {
-    Card,
-    CardAction,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "../components/card";
 import { useAuth } from "../contexts/AuthContext";
 import { medicationService } from "../services/medicationService";
@@ -78,12 +79,10 @@ export default function PrescriptionsScreen() {
       if (result.success) {
         setMedications(result.medications || []);
       } else {
-        console.error("Failed to load medications:", result.error);
         setError(result.error || "Failed to load medications");
         setMedications([]);
       }
     } catch (error) {
-      console.error("Error loading medications:", error);
       setError("An unexpected error occurred");
       setMedications([]);
     } finally {
@@ -246,15 +245,16 @@ export default function PrescriptionsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer} edges={['top']}>
         <ActivityIndicator size="large" color="#3B82F6" />
         <Text style={styles.loadingText}>Loading your medications...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -277,7 +277,10 @@ export default function PrescriptionsScreen() {
 
         {error && (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>❌ {error}</Text>
+            <View style={styles.errorContent}>
+              <MaterialCommunityIcons name="alert-circle" size={20} color="#DC2626" style={styles.errorIcon} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
             <TouchableOpacity
               onPress={loadMedications}
               style={styles.retryButton}
@@ -300,11 +303,16 @@ export default function PrescriptionsScreen() {
           )}
         </View>
       </ScrollView>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#E0F2FE",
+  },
   container: {
     flex: 1,
     backgroundColor: "#E0F2FE",
@@ -329,17 +337,12 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 8,
-    backgroundColor: "#E0F2FE",
-    padding: 20,
-    borderRadius: 12,
-    marginHorizontal: -20,
-    marginTop: -10,
-    paddingTop: 60,
   },
   title: {
     fontSize: 32,
     fontWeight: "700",
     color: "#1E40AF",
+    marginBottom: 24,
   },
   addButton: {
     marginBottom: 18,
@@ -405,11 +408,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  errorContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  errorIcon: {
+    marginRight: 8,
+  },
   errorText: {
     flex: 1,
     fontSize: 14,
     color: "#DC2626",
-    marginRight: 12,
   },
   retryButton: {
     backgroundColor: "#EF4444",
