@@ -103,9 +103,7 @@ function MainNavigator() {
         name="Home"
         component={HomeNavigator}
         options={{
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="home" size={28} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="home" size={28} color={color} />,
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
@@ -123,9 +121,7 @@ function MainNavigator() {
         name="Prescriptions"
         component={PrescriptionsNavigator}
         options={{
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="pill" size={28} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="pill" size={28} color={color} />,
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
@@ -171,7 +167,7 @@ export function RootNavigator() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1E40AF" />
+        <ActivityIndicator size="large" color="#1E40AF" testID="activity-indicator" />
       </View>
     );
   }
