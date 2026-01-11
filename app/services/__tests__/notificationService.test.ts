@@ -16,6 +16,10 @@ jest.mock('expo-notifications', () => ({
   AndroidNotificationPriority: {
     MAX: 'max',
   },
+  SchedulableTriggerInputTypes: {
+    CALENDAR: 'calendar',
+    DAILY: 'daily',
+  },
 }));
 
 import * as Notifications from 'expo-notifications';
