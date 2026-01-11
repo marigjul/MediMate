@@ -118,12 +118,10 @@ export function MedicationNotificationProvider({ children }: { children: React.R
       // Handle single medication notification
       if (data.type === 'medication-reminder' && data.medicationId && data.time) {
         // You can navigate to the medication detail or home screen here
-        console.log('Notification tapped for medication:', data.medicationId, 'at', data.time);
       }
       
       // Handle grouped medication notification
       if (data.type === 'medication-reminder-group' && data.medications) {
-        console.log('Notification tapped for medications at', data.time);
       }
     });
 

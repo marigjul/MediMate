@@ -237,28 +237,63 @@ export const medicationService = {
         return { success: false, error: "Could not fetch medication info" };
       }
 
+      // Convert dot notation to nested structure for storage
+      const scheduleForStorage = {
+        type: scheduleData['schedule.type'],
+        times: scheduleData['schedule.times'],
+        frequency: scheduleData['schedule.frequency'],
+      };
+
+      // Add interval-specific fields if present
+      if (scheduleData['schedule.startTime']) {
+        scheduleForStorage.startTime = scheduleData['schedule.startTime'];
+      }
+      if (scheduleData['schedule.dosesPerDay']) {
+        scheduleForStorage.dosesPerDay = scheduleData['schedule.dosesPerDay'];
+      }
+      if (scheduleData['schedule.hoursBetweenDoses']) {
+        scheduleForStorage.hoursBetweenDoses = scheduleData['schedule.hoursBetweenDoses'];
+      }
+
+      const durationForStorage = {
+        type: scheduleData['duration.type'],
+      };
+      if (scheduleData['duration.days']) {
+        durationForStorage.days = scheduleData['duration.days'];
+      }
+
       // Initialize today's status for all scheduled times
       const today = medicationService.getTodayDateString();
       const todayStatus = {};
-      if (scheduleData.times) {
-        scheduleData.times.forEach(time => {
+      if (scheduleData['schedule.times']) {
+        scheduleData['schedule.times'].forEach(time => {
           todayStatus[time] = 'pending';
         });
       }
 
-      // Save medication with FDA data
-      const docRef = await addDoc(collection(db, "medications"), {
+      // Build medication document
+      const medicationDoc = {
         userId,
         medicationName: medicationName.toLowerCase(),
         fdaData: fdaResult.data,
-        schedule: scheduleData,
+        dosage: scheduleData.dosage,
+        schedule: scheduleForStorage,
+        duration: durationForStorage,
         streak: 0,
         isActive: true,
         todayStatus: todayStatus,
         statusDate: today,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      });
+      };
+
+      // Add refill reminder if present
+      if (scheduleData.refillReminder) {
+        medicationDoc.refillReminder = scheduleData.refillReminder;
+      }
+
+      // Save medication with FDA data
+      const docRef = await addDoc(collection(db, "medications"), medicationDoc);
 
       return {
         success: true,

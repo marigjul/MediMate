@@ -190,14 +190,21 @@ describe("MedicationConfirmScreen", () => {
           "test-user-123",
           "aspirin",
           expect.objectContaining({
-            times: ["09:00", "17:00"],
-            frequency: "2x daily (every 8h)",
+            dosage: "500mg",
+            'schedule.type': 'interval',
+            'schedule.times': ["09:00", "17:00"],
+            'schedule.frequency': "2x daily (every 8h)",
+            'schedule.startTime': "09:00",
+            'schedule.dosesPerDay': 2,
+            'schedule.hoursBetweenDoses': 8,
+            'duration.type': "permanent",
+            refillReminder: 30,
           })
         );
       });
     });
 
-    it("TC-103: Should update medication with full details after adding", async () => {
+    it("TC-103: Should add medication with all data in one call", async () => {
       (
         medicationService.searchMedicationFromFDA as jest.Mock
       ).mockResolvedValue({
@@ -208,9 +215,6 @@ describe("MedicationConfirmScreen", () => {
         success: true,
         id: "new-med-123",
       });
-      (medicationService.updateMedication as jest.Mock).mockResolvedValue({
-        success: true,
-      });
 
       const { getByText } = renderConfirmScreen();
 
@@ -218,13 +222,9 @@ describe("MedicationConfirmScreen", () => {
       fireEvent.press(confirmButton);
 
       await waitFor(() => {
-        expect(medicationService.updateMedication).toHaveBeenCalledWith(
-          "new-med-123",
-          expect.objectContaining({
-            dosage: "500mg",
-            refillReminder: 30,
-          })
-        );
+        expect(medicationService.addMedicationWithFDA).toHaveBeenCalled();
+        expect(medicationService.updateMedication).not.toHaveBeenCalled();
+        expect(mockNavigate).toHaveBeenCalledWith("PrescriptionsMain");
       });
     });
 
@@ -310,9 +310,6 @@ describe("MedicationConfirmScreen", () => {
         success: true,
         id: "new-med-123",
       });
-      (medicationService.updateMedication as jest.Mock).mockResolvedValue({
-        success: true,
-      });
 
       const { getByText } = renderConfirmScreen();
 
@@ -320,12 +317,12 @@ describe("MedicationConfirmScreen", () => {
       fireEvent.press(confirmButton);
 
       await waitFor(() => {
-        expect(medicationService.updateMedication).toHaveBeenCalledWith(
-          "new-med-123",
+        expect(medicationService.addMedicationWithFDA).toHaveBeenCalledWith(
+          "test-user-123",
+          "aspirin",
           expect.objectContaining({
-            duration: expect.objectContaining({
-              days: 14,
-            }),
+            'duration.type': "limited",
+            'duration.days': 14,
           })
         );
       });

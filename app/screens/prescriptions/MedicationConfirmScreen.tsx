@@ -107,65 +107,39 @@ export default function MedicationConfirmScreen() {
       } else {
         await medicationService.searchMedicationFromFDA(medicationName);
 
+        const medicationData: any = {
+          dosage: scheduleData.dosage,
+          'schedule.type': scheduleData.schedule.type,
+          'schedule.times': scheduleData.schedule.times || [],
+          'schedule.frequency': scheduleData.schedule.frequency,
+          'duration.type': scheduleData.duration.type,
+        };
+
+        // Add optional schedule fields for interval type
+        if (scheduleData.schedule.type === 'interval') {
+          medicationData['schedule.startTime'] = scheduleData.schedule.startTime;
+          medicationData['schedule.dosesPerDay'] = scheduleData.schedule.dosesPerDay;
+          medicationData['schedule.hoursBetweenDoses'] = scheduleData.schedule.hoursBetweenDoses;
+        }
+
+        // Add duration days if limited
+        if (scheduleData.duration.type === 'limited') {
+          medicationData['duration.days'] = scheduleData.duration.days;
+        }
+
+        // Add refill reminder if present
+        if (scheduleData.refillReminder) {
+          medicationData.refillReminder = scheduleData.refillReminder;
+        }
+
         const addResult = await medicationService.addMedicationWithFDA(
           user.uid,
           medicationName,
-          {
-            times: scheduleData.schedule.times || [],
-            frequency: scheduleData.schedule.frequency,
-            duration:
-              scheduleData.duration.type === "permanent"
-                ? "permanent"
-                : `${scheduleData.duration.days} days`,
-          }
+          medicationData
         );
 
         if (addResult.success) {
-          const updateData: any = {
-            dosage: scheduleData.dosage,
-            schedule: {
-              times: scheduleData.schedule.times,
-              frequency: scheduleData.schedule.frequency,
-            },
-            duration: {
-              type: scheduleData.duration.type,
-            },
-          };
-
-          if (scheduleData.schedule.type) {
-            updateData.schedule.type = scheduleData.schedule.type;
-          }
-          if (scheduleData.schedule.startTime) {
-            updateData.schedule.startTime = scheduleData.schedule.startTime;
-          }
-          if (scheduleData.schedule.dosesPerDay) {
-            updateData.schedule.dosesPerDay = scheduleData.schedule.dosesPerDay;
-          }
-          if (scheduleData.schedule.hoursBetweenDoses) {
-            updateData.schedule.hoursBetweenDoses =
-              scheduleData.schedule.hoursBetweenDoses;
-          }
-
-          if (scheduleData.duration.days) {
-            updateData.duration.days = scheduleData.duration.days;
-          }
-
-          if (scheduleData.refillReminder) {
-            updateData.refillReminder = scheduleData.refillReminder;
-          }
-
-          const updateResult = await medicationService.updateMedication(
-            addResult.id,
-            updateData
-          );
-
-          if (updateResult.success) {
-            navigation.navigate("PrescriptionsMain");
-          } else {
-            throw new Error(
-              updateResult.error || "Failed to update medication details"
-            );
-          }
+          navigation.navigate("PrescriptionsMain");
         } else {
           throw new Error(addResult.error || "Failed to add medication");
         }
