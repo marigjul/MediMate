@@ -2,9 +2,9 @@
 
 ## Overview
 
-MediMate uses **Jest** and **React Native Testing Library** for testing. The test suite covers both frontend UI components and backend service logic with **360 passing tests**:
+MediMate uses **Jest** and **React Native Testing Library** for testing. The test suite covers both frontend UI components and backend service logic with **364 passing tests**:
 
-- **Component Tests**: 240 tests (40 home + 59 profile + 130 prescription + 11 component)
+- **Component Tests**: 244 tests (40 home + 59 profile + 134 prescription + 11 component)
 - **Service Tests**: 127 tests (38 auth + 61 medication + 28 notification)
 
 All tests use mocked Firebase services for fast, reliable unit testing.
@@ -114,7 +114,7 @@ Located in `app/screens/__tests__/`
 - Form validation (empty fields, password matching)
 - Error handling for failed updates
 
-#### Prescription Screens (130 tests)
+#### Prescription Screens (134 tests)
 
 Located in `app/screens/prescriptions/__tests__/` and `app/screens/__tests__/`
 
@@ -157,10 +157,10 @@ Located in `app/screens/prescriptions/__tests__/` and `app/screens/__tests__/`
 - Loading state during save
 - Navigation
 
-**PrescriptionsScreen.test.tsx** (24 tests: TC-114 to TC-116, TC-118 to TC-120, TC-122 to TC-130, TC-132 to TC-140)
+**PrescriptionsScreen.test.tsx** (28 tests: TC-114 to TC-116, TC-118 to TC-120, TC-122 to TC-130, TC-132 to TC-144)
 
 - Initial rendering and medication list loading
-- Empty state display
+- Empty state display with call-to-action
 - Medication cards with conditional content
 - Streak display for permanent medications
 - Duration display for time-limited medications
@@ -171,9 +171,15 @@ Located in `app/screens/prescriptions/__tests__/` and `app/screens/__tests__/`
 - Error handling with retry
 - User state management
 - Backward compatibility with old data format
+- **Real-time updates** (TC-141):
+  - Medication list reload when screen gains focus (useFocusEffect)
+- **Empty state call-to-action** (TC-142 to TC-144):
+  - Add Medication button visibility in empty state
+  - Navigation from empty state to add medication flow
+  - Encouragement message display
 - Note: Loading indicator test (TC-117), schedule formatting (TC-121), and error message test (TC-131) removed
 
-**MedicationViewScreen.test.tsx** (40 tests: TC-141 to TC-180)
+**MedicationViewScreen.test.tsx** (40 tests: TC-145 to TC-184)
 
 - Medication information display (name, dosage, schedule, duration)
 - FDA information display (ingredient, purpose, warnings)
@@ -341,13 +347,13 @@ npm test -- --watch
 
 ## Test Results Summary
 
-✅ **360 Total Tests Passing (100% Pass Rate)**
+✅ **364 Total Tests Passing (100% Pass Rate)**
 
-- Component Tests: 240 passing
+- Component Tests: 244 passing
   - Basic Components: 11 tests (button, card)
   - Home Screen: 40 tests (HomeScreen)
   - Profile Screens: 59 tests (LoginScreen + ProfileScreen + EditProfileScreen)
-  - Prescription Screens: 130 tests (6 screens)
+  - Prescription Screens: 134 tests (6 screens)
 - Service Tests: 127 passing (38 auth + 61 medication + 28 notification)
 
 All tests verify:
@@ -377,3 +383,5 @@ All tests verify:
 - Daily log initialization and status updates
 - Streak calculation with various scenarios
 - Platform-specific notification behavior
+- **Real-time updates via screen focus** (automatic reload when navigating back to prescriptions)
+- **Empty state with call-to-action** (encouragement to add first medication)
