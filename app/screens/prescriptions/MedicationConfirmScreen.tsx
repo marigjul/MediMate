@@ -132,9 +132,6 @@ export default function MedicationConfirmScreen() {
           medicationData.refillReminder = scheduleData.refillReminder;
         }
 
-        console.log('MedicationConfirmScreen - scheduleData:', JSON.stringify(scheduleData, null, 2));
-        console.log('MedicationConfirmScreen - medicationData being sent:', JSON.stringify(medicationData, null, 2));
-
         const addResult = await medicationService.addMedicationWithFDA(
           user.uid,
           medicationName,

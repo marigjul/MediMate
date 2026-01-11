@@ -244,9 +244,6 @@ export const medicationService = {
         frequency: scheduleData['schedule.frequency'],
       };
 
-      console.log('scheduleData received:', JSON.stringify(scheduleData, null, 2));
-      console.log('scheduleForStorage:', JSON.stringify(scheduleForStorage, null, 2));
-
       // Add interval-specific fields if present
       if (scheduleData['schedule.startTime']) {
         scheduleForStorage.startTime = scheduleData['schedule.startTime'];
@@ -297,8 +294,6 @@ export const medicationService = {
 
       // Save medication with FDA data
       const docRef = await addDoc(collection(db, "medications"), medicationDoc);
-
-      console.log('Saved medication document:', JSON.stringify(medicationDoc, null, 2));
 
       return {
         success: true,
