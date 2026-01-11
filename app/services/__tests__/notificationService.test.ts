@@ -84,7 +84,7 @@ describe('NotificationService', () => {
       expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           content: expect.objectContaining({
-            title: '💊 Time to take your medication',
+            title: 'Time to take your medication',
             body: 'Aspirin - 500mg',
           }),
           trigger: expect.objectContaining({
@@ -130,7 +130,7 @@ describe('NotificationService', () => {
       expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           content: expect.objectContaining({
-            title: '💊 Time to take 2 medications',
+            title: 'Time to take 2 medications',
             body: expect.stringContaining('Aspirin - 500mg'),
           }),
         })
@@ -150,7 +150,7 @@ describe('NotificationService', () => {
       expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           content: expect.objectContaining({
-            title: '💊 Time to take your medication',
+            title: 'Time to take your medication',
           }),
         })
       );

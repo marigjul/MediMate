@@ -65,10 +65,11 @@ export const notificationService = {
       
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
-          title: '💊 Time to take your medication',
+          title: 'Time to take your medication',
           body: `${brandName || medicationName} - ${dosage}`,
           sound: true,
           priority: Notifications.AndroidNotificationPriority.MAX,
+          ...(Platform.OS === 'android' && { icon: 'ic_launcher' }),
           data: {
             medicationId,
             time,
@@ -108,8 +109,8 @@ export const notificationService = {
         .join('\n');
 
       const title = medications.length === 1 
-        ? '💊 Time to take your medication'
-        : `💊 Time to take ${medications.length} medications`;
+        ? 'Time to take your medication'
+        : `Time to take ${medications.length} medications`;
 
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
@@ -117,6 +118,7 @@ export const notificationService = {
           body: medList,
           sound: true,
           priority: Notifications.AndroidNotificationPriority.MAX,
+          ...(Platform.OS === 'android' && { icon: 'ic_launcher' }),
           data: {
             medications: medications.map(m => ({ id: m.id, time })),
             time,
