@@ -2,16 +2,16 @@
 
 ## Overview
 
-MediMate uses **Jest** and **React Native Testing Library** for testing. The test suite covers both frontend UI components and backend service logic with **245 passing tests**:
+MediMate uses **Jest** and **React Native Testing Library** for testing. The test suite covers both frontend UI components and backend service logic with **282 passing tests**:
 
-- **Component Tests**: 203 tests (40 home + 22 profile + 130 prescription + 11 component)
+- **Component Tests**: 240 tests (40 home + 59 profile + 130 prescription + 11 component)
 - **Service Tests**: 42 tests (17 auth + 13 medication + 12 notification)
 
 All tests use mocked Firebase services for fast, reliable unit testing.
 
 ## Test Structure
 
-### Component Tests (203 tests)
+### Component Tests (240 tests)
 
 #### Basic Components (11 tests)
 
@@ -46,9 +46,58 @@ Located in `app/screens/__tests__/`
 - Error handling (failed API calls, null user)
 - Data handling (missing fdaData, missing todayStatus)
 
-#### Profile Screens (22 tests)
+#### Profile Screens (59 tests)
 
 Located in `app/screens/__tests__/`
+
+**LoginScreen.test.tsx** (37 tests)
+
+- UI Rendering (4 tests)
+  - Login form default rendering
+  - Sign up form toggle functionality
+  - Form mode switching
+  - Field clearing on toggle
+- Email/Password Validation - Login (4 tests)
+  - Empty field validation
+  - Individual field validation (email, password)
+  - Service call prevention on validation failure
+- Email/Password Validation - Sign Up (3 tests)
+  - Empty fields validation
+  - Password matching validation
+  - Password length requirements (6+ characters)
+- Button States (4 tests)
+  - Button enabled/disabled states
+  - Button disabling during loading
+  - Input fields disabling during loading
+  - Toggle button disabling during loading
+- Loading States (2 tests)
+  - Loading indicator display
+  - Button text hiding during loading
+- Authentication Flow - Login (2 tests)
+  - authService.login call with correct credentials
+  - Successful login handling
+- Error Message Display (9 tests)
+  - Invalid email error
+  - User not found error
+  - Wrong password error
+  - Invalid credential error
+  - User disabled error
+  - Too many requests error
+  - Generic error messages
+  - Unexpected error handling
+  - Error clearing on retry
+- Authentication Flow - Sign Up (4 tests)
+  - authService.register call with correct data
+  - Successful registration handling
+  - Email already in use error
+  - Weak password error from server
+- Form State Management (4 tests)
+  - Email field updates
+  - Password field updates
+  - Name field updates (sign up mode)
+  - Confirm password updates (sign up mode)
+- Error Clearing (1 test)
+  - Error clearing when toggling between login/sign up
 
 **ProfileScreen.test.tsx** (10 tests)
 
@@ -180,6 +229,7 @@ npm test
 
 ```bash
 # Profile Screen Tests
+npm test LoginScreen
 npm test ProfileScreen
 npm test EditProfileScreen
 
@@ -271,21 +321,21 @@ npm test -- --watch
 
 ## Test Results Summary
 
-✅ **245 Total Tests Passing (100% Pass Rate)**
+✅ **282 Total Tests Passing (100% Pass Rate)**
 
-- Component Tests: 203 passing
+- Component Tests: 240 passing
   - Basic Components: 11 tests (button, card)
   - Home Screen: 40 tests (HomeScreen)
-  - Profile Screens: 22 tests (ProfileScreen + EditProfileScreen)
+  - Profile Screens: 59 tests (LoginScreen + ProfileScreen + EditProfileScreen)
   - Prescription Screens: 130 tests (6 screens)
 - Service Tests: 42 passing (17 auth + 13 medication + 12 notification)
 
 All tests verify:
 
 - Correct user interface rendering
+- Authentication flows (login, sign up, validation)
 - Backend communication with Firebase
 - Form validation and error handling
-- Authentication flows
 - Medication management features (CRUD operations)
 - FDA API integration and caching strategy
 - Medication search and display
@@ -299,3 +349,6 @@ All tests verify:
 - Real-time medication status tracking
 - Progress tracking and next medication display
 - Notification permissions and scheduling
+- Login/Sign up UI and validation
+- Password requirements and matching
+- Error message display for various auth errors
