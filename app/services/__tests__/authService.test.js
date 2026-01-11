@@ -30,20 +30,20 @@ jest.mock('../../config/firebase', () => ({
 }));
 
 import {
-  createUserWithEmailAndPassword,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-  signInWithEmailAndPassword,
-  signOut,
-  updateEmail,
-  updatePassword,
-  updateProfile,
+    createUserWithEmailAndPassword,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    signInWithEmailAndPassword,
+    signOut,
+    updateEmail,
+    updatePassword,
+    updateProfile,
 } from "firebase/auth";
 import {
-  getDoc,
-  serverTimestamp,
-  setDoc,
-  updateDoc
+    getDoc,
+    serverTimestamp,
+    setDoc,
+    updateDoc
 } from "firebase/firestore";
 import { authService } from "../authService";
 
@@ -376,6 +376,330 @@ describe("AuthService: MediMate Authentication", () => {
 
       expect(mockCallback).toHaveBeenCalled();
       expect(typeof unsubscribe).toBe('function');
+    });
+
+    test("TC-18: Should handle auth state change from logged out to logged in", () => {
+      const mockCallback = jest.fn();
+      const mockUnsubscribe = jest.fn();
+
+      require('firebase/auth').onAuthStateChanged.mockImplementation((auth, callback) => {
+        // Simulate user logging in
+        callback(null); // Initially logged out
+        callback({ uid: testUserId, email: mockUser.email }); // Then logged in
+        return mockUnsubscribe;
+      });
+
+      const unsubscribe = authService.onAuthStateChange(mockCallback);
+
+      expect(mockCallback).toHaveBeenCalledTimes(2);
+      expect(mockCallback).toHaveBeenNthCalledWith(1, null);
+      expect(mockCallback).toHaveBeenNthCalledWith(2, 
+        expect.objectContaining({ uid: testUserId })
+      );
+      expect(typeof unsubscribe).toBe('function');
+    });
+
+    test("TC-19: Should handle auth state change from logged in to logged out", () => {
+      const mockCallback = jest.fn();
+      const mockUnsubscribe = jest.fn();
+
+      require('firebase/auth').onAuthStateChanged.mockImplementation((auth, callback) => {
+        // Simulate user logging out
+        callback({ uid: testUserId, email: mockUser.email }); // Initially logged in
+        callback(null); // Then logged out
+        return mockUnsubscribe;
+      });
+
+      const unsubscribe = authService.onAuthStateChange(mockCallback);
+
+      expect(mockCallback).toHaveBeenCalledTimes(2);
+      expect(mockCallback).toHaveBeenNthCalledWith(1, 
+        expect.objectContaining({ uid: testUserId })
+      );
+      expect(mockCallback).toHaveBeenNthCalledWith(2, null);
+    });
+
+    test("TC-20: Should unsubscribe from auth state changes", () => {
+      const mockCallback = jest.fn();
+      const mockUnsubscribe = jest.fn();
+
+      require('firebase/auth').onAuthStateChanged.mockImplementation((auth, callback) => {
+        callback({ email: mockUser.email });
+        return mockUnsubscribe;
+      });
+
+      const unsubscribe = authService.onAuthStateChange(mockCallback);
+      unsubscribe();
+
+      expect(mockUnsubscribe).toHaveBeenCalled();
+    });
+
+    test("TC-21: Should persist null user state when no user is logged in", () => {
+      const mockCallback = jest.fn();
+      const mockUnsubscribe = jest.fn();
+
+      require('firebase/auth').onAuthStateChanged.mockImplementation((auth, callback) => {
+        callback(null);
+        return mockUnsubscribe;
+      });
+
+      authService.onAuthStateChange(mockCallback);
+
+      expect(mockCallback).toHaveBeenCalledWith(null);
+    });
+  });
+
+  describe("Multiple Login Attempts", () => {
+    test("TC-22: Should handle multiple failed login attempts", async () => {
+      signInWithEmailAndPassword.mockRejectedValue({
+        code: "auth/wrong-password",
+        message: "Firebase: Error (auth/wrong-password).",
+      });
+
+      // Attempt multiple logins
+      const result1 = await authService.login(mockUser.email, "wrong1");
+      const result2 = await authService.login(mockUser.email, "wrong2");
+      const result3 = await authService.login(mockUser.email, "wrong3");
+
+      expect(result1.success).toBe(false);
+      expect(result2.success).toBe(false);
+      expect(result3.success).toBe(false);
+      expect(signInWithEmailAndPassword).toHaveBeenCalledTimes(3);
+    });
+
+    test("TC-23: Should handle too many requests error", async () => {
+      signInWithEmailAndPassword.mockRejectedValue({
+        code: "auth/too-many-requests",
+        message: "Access to this account has been temporarily disabled due to many failed login attempts.",
+      });
+
+      const result = await authService.login(mockUser.email, mockUser.password);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("temporarily disabled");
+    });
+
+    test("TC-24: Should succeed on valid attempt after failed attempts", async () => {
+      // First attempt fails
+      signInWithEmailAndPassword.mockRejectedValueOnce({
+        code: "auth/wrong-password",
+        message: "Firebase: Error (auth/wrong-password).",
+      });
+
+      // Second attempt succeeds
+      signInWithEmailAndPassword.mockResolvedValueOnce({
+        user: { uid: testUserId, email: mockUser.email },
+      });
+
+      const result1 = await authService.login(mockUser.email, "wrongpass");
+      const result2 = await authService.login(mockUser.email, mockUser.password);
+
+      expect(result1.success).toBe(false);
+      expect(result2.success).toBe(true);
+    });
+  });
+
+  describe("Session Expiration & Reauthentication", () => {
+    test("TC-25: Should require reauthentication for password update", async () => {
+      EmailAuthProvider.credential.mockReturnValue({});
+      reauthenticateWithCredential.mockResolvedValue();
+      updatePassword.mockResolvedValue();
+
+      const result = await authService.updateUserPassword(
+        mockUser.password,
+        "NewSecurePass123!"
+      );
+
+      expect(result.success).toBe(true);
+      expect(reauthenticateWithCredential).toHaveBeenCalled();
+    });
+
+    test("TC-26: Should require reauthentication for email update", async () => {
+      EmailAuthProvider.credential.mockReturnValue({});
+      reauthenticateWithCredential.mockResolvedValue();
+      updateEmail.mockResolvedValue();
+      updateDoc.mockResolvedValue();
+
+      const result = await authService.updateUserEmail(
+        "newemail@medimate.com",
+        mockUser.password
+      );
+
+      expect(result.success).toBe(true);
+      expect(reauthenticateWithCredential).toHaveBeenCalled();
+    });
+
+    test("TC-27: Should handle session expired error during reauthentication", async () => {
+      EmailAuthProvider.credential.mockReturnValue({});
+      reauthenticateWithCredential.mockRejectedValue({
+        code: "auth/requires-recent-login",
+        message: "This operation is sensitive and requires recent authentication.",
+      });
+
+      const result = await authService.updateUserPassword(
+        mockUser.password,
+        "NewPassword123!"
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("sensitive");
+    });
+
+    test("TC-28: Should handle invalid credential during reauthentication", async () => {
+      EmailAuthProvider.credential.mockReturnValue({});
+      reauthenticateWithCredential.mockRejectedValue({
+        code: "auth/invalid-credential",
+        message: "The supplied auth credential is malformed or has expired.",
+      });
+
+      const result = await authService.updateUserEmail(
+        "new@test.com",
+        "wrongpass"
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("malformed");
+    });
+
+    test("TC-29: Should handle network error during reauthentication", async () => {
+      EmailAuthProvider.credential.mockReturnValue({});
+      reauthenticateWithCredential.mockRejectedValue({
+        code: "auth/network-request-failed",
+        message: "A network error occurred.",
+      });
+
+      const result = await authService.updateUserPassword(
+        mockUser.password,
+        "NewPassword123!"
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("network error");
+    });
+  });
+
+  describe("Additional Error Scenarios", () => {
+    test("TC-30: Should handle email already in use during email update", async () => {
+      EmailAuthProvider.credential.mockReturnValue({});
+      reauthenticateWithCredential.mockResolvedValue();
+      updateEmail.mockRejectedValue({
+        code: "auth/email-already-in-use",
+        message: "The email address is already in use by another account.",
+      });
+
+      const result = await authService.updateUserEmail(
+        "existing@medimate.com",
+        mockUser.password
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("already in use");
+    });
+
+    test("TC-31: Should handle invalid email format during registration", async () => {
+      createUserWithEmailAndPassword.mockRejectedValue({
+        code: "auth/invalid-email",
+        message: "The email address is badly formatted.",
+      });
+
+      const result = await authService.register(
+        "not-an-email",
+        "Password123!",
+        "Test User"
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("badly formatted");
+    });
+
+    test("TC-32: Should handle invalid email format during login", async () => {
+      signInWithEmailAndPassword.mockRejectedValue({
+        code: "auth/invalid-email",
+        message: "The email address is badly formatted.",
+      });
+
+      const result = await authService.login("not-an-email", "Password123!");
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("badly formatted");
+    });
+
+    test("TC-33: Should handle user disabled error", async () => {
+      signInWithEmailAndPassword.mockRejectedValue({
+        code: "auth/user-disabled",
+        message: "The user account has been disabled by an administrator.",
+      });
+
+      const result = await authService.login(mockUser.email, mockUser.password);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("disabled");
+    });
+
+    test("TC-34: Should handle Firestore error when creating user document", async () => {
+      createUserWithEmailAndPassword.mockResolvedValue({
+        user: { uid: testUserId, email: mockUser.email },
+      });
+      updateProfile.mockResolvedValue();
+      setDoc.mockRejectedValue(new Error("Firestore: Permission denied"));
+
+      const result = await authService.register(
+        mockUser.email,
+        mockUser.password,
+        "Test User"
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Permission denied");
+    });
+
+    test("TC-35: Should handle Firestore error when updating profile", async () => {
+      updateProfile.mockResolvedValue();
+      updateDoc.mockRejectedValue(new Error("Firestore: Document not found"));
+
+      const result = await authService.updateUserProfile(testUserId, {
+        name: "New Name",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Document not found");
+    });
+
+    test("TC-36: Should handle logout error gracefully", async () => {
+      signOut.mockRejectedValue(new Error("Failed to sign out"));
+
+      const result = await authService.logout();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Failed to sign out");
+    });
+
+    test("TC-37: Should handle network error during registration", async () => {
+      createUserWithEmailAndPassword.mockRejectedValue({
+        code: "auth/network-request-failed",
+        message: "A network error occurred.",
+      });
+
+      const result = await authService.register(
+        mockUser.email,
+        mockUser.password,
+        "Test User"
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("network error");
+    });
+
+    test("TC-38: Should handle network error during login", async () => {
+      signInWithEmailAndPassword.mockRejectedValue({
+        code: "auth/network-request-failed",
+        message: "A network error occurred.",
+      });
+
+      const result = await authService.login(mockUser.email, mockUser.password);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("network error");
     });
   });
 });

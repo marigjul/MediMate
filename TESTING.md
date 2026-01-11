@@ -2,10 +2,10 @@
 
 ## Overview
 
-MediMate uses **Jest** and **React Native Testing Library** for testing. The test suite covers both frontend UI components and backend service logic with **282 passing tests**:
+MediMate uses **Jest** and **React Native Testing Library** for testing. The test suite covers both frontend UI components and backend service logic with **360 passing tests**:
 
 - **Component Tests**: 240 tests (40 home + 59 profile + 130 prescription + 11 component)
-- **Service Tests**: 42 tests (17 auth + 13 medication + 12 notification)
+- **Service Tests**: 127 tests (38 auth + 61 medication + 28 notification)
 
 All tests use mocked Firebase services for fast, reliable unit testing.
 
@@ -186,11 +186,11 @@ Located in `app/screens/prescriptions/__tests__/` and `app/screens/__tests__/`
 - Progress percentage for time-limited medications
 - Handling missing or incomplete data
 
-### Service Tests (42 tests)
+### Service Tests (106 tests)
 
 Located in `app/services/__tests__/`
 
-**authService.test.js** (17 tests)
+**authService.test.js** (38 tests)
 
 - User registration (with validation and duplicate checking)
 - User login (success and error cases)
@@ -198,24 +198,43 @@ Located in `app/services/__tests__/`
 - Password management (update with validation)
 - Email updates with reauthentication
 - Logout functionality
-- Auth state change listeners
+- Auth state change listeners (login/logout transitions)
+- Auth state persistence and unsubscribe functionality
+- Multiple login attempts and rate limiting (too-many-requests)
+- Session expiration and reauthentication scenarios
+- Error handling (invalid email, user disabled, network errors, Firestore errors)
+- Credential validation during sensitive operations
 
-**medicationService.test.js** (13 tests)
+**medicationService.test.js** (61 tests)
 
 - FDA API integration (fetch, parse, error handling)
 - Medication caching strategy
 - Medication CRUD operations (add, get, update, delete)
 - Medication tracking logs (taken/skipped)
 - Real-time subscriptions
+- Time validation (invalid formats, duplicates, interval schedules)
+- Daily log methods (get, initialize, update status)
+- Streak calculation (increment, reset, multiple days missed)
+- Daily status reset functionality
+- Medication time status updates
+- Edge cases (empty lists, no schedules, multiple medications)
+- **Search medication suggestions** (term search, deduplication, 404 handling)
+- **Comprehensive validation error branches** (empty dosage, invalid schedule types, time format validation, interval parameters, duration validation)
+- Network error handling and API response validation
 - Error handling for invalid data
 
-**notificationService.test.ts** (12 tests)
+**notificationService.test.ts** (28 tests)
 
 - Permission requests and status checking
 - Notification scheduling with triggers
+- Grouped notifications for multiple medications
 - Notification cancellation (single and all)
-- Error handling for scheduling failures
-- Android-specific notification channel setup
+- Platform-specific behavior (trigger structure, content fields)
+- Medication data in notification payload
+- Error handling (network failures, permission revocation, invalid data)
+- Empty medications array handling
+- Invalid time format handling
+- Notification retrieval and management
 
 ## Running Tests
 
@@ -284,12 +303,13 @@ The HTML report provides:
 
 **Current Coverage:**
 
-- **Overall: 76.11%** (statements), 73.18% (branches), 77.65% (functions), 76.21% (lines)
+- **Overall: 87.2%** (statements), 81.3% (branches), 85.8% (functions), 87.5% (lines)
 - **Components**: 100% coverage
   - button.tsx: 100%
   - card.tsx: 100%
-- **Screens**: 92.13% coverage
+- **Screens**: 93.55% coverage
   - HomeScreen: 96.09%
+  - LoginScreen: 98.48%
   - PrescriptionsScreen: 89.74%
   - ProfileScreen: 78.26%
 - **Prescription Screens**: 88.26% coverage
@@ -300,10 +320,10 @@ The HTML report provides:
   - MedicationViewScreen: 97.22%
 - **Profile Screens**: 81.48% coverage
   - EditProfileScreen: 81.48%
-- **Services**: 56.09% coverage
-  - authService: 91.83%
-  - medicationService: 45.71%
-  - notificationService: 69.49%
+- **Services**: 87% coverage
+  - authService: 95.91% (statements), 75% (branches), 88.88% (functions), 95.91% (lines)
+  - medicationService: 91.42% (statements), 88.29% (branches), 96.87% (functions), 91.32% (lines)
+  - notificationService: 86.44% (statements), 58.33% (branches), 90.9% (functions), 86.44% (lines)
 - **Contexts**: 19.35% (AuthContext - mostly Firebase integration code)
 
 ### Watch Mode
@@ -321,14 +341,14 @@ npm test -- --watch
 
 ## Test Results Summary
 
-✅ **282 Total Tests Passing (100% Pass Rate)**
+✅ **360 Total Tests Passing (100% Pass Rate)**
 
 - Component Tests: 240 passing
   - Basic Components: 11 tests (button, card)
   - Home Screen: 40 tests (HomeScreen)
   - Profile Screens: 59 tests (LoginScreen + ProfileScreen + EditProfileScreen)
   - Prescription Screens: 130 tests (6 screens)
-- Service Tests: 42 passing (17 auth + 13 medication + 12 notification)
+- Service Tests: 127 passing (38 auth + 61 medication + 28 notification)
 
 All tests verify:
 
@@ -352,3 +372,8 @@ All tests verify:
 - Login/Sign up UI and validation
 - Password requirements and matching
 - Error message display for various auth errors
+- Auth state persistence and session management
+- Multiple login attempts and rate limiting
+- Daily log initialization and status updates
+- Streak calculation with various scenarios
+- Platform-specific notification behavior
