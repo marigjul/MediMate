@@ -2,16 +2,49 @@
 
 ## Overview
 
-MediMate uses **Jest** and **React Native Testing Library** for testing. The test suite covers both frontend UI components and backend service logic with **182 passing tests**:
+MediMate uses **Jest** and **React Native Testing Library** for testing. The test suite covers both frontend UI components and backend service logic with **245 passing tests**:
 
-- **Component Tests**: 152 tests (22 profile + 130 prescription)
-- **Service Tests**: 30 tests (17 auth + 13 medication)
+- **Component Tests**: 203 tests (40 home + 22 profile + 130 prescription + 11 component)
+- **Service Tests**: 42 tests (17 auth + 13 medication + 12 notification)
 
 All tests use mocked Firebase services for fast, reliable unit testing.
 
 ## Test Structure
 
-### Component Tests (150 tests)
+### Component Tests (203 tests)
+
+#### Basic Components (11 tests)
+
+Located in `app/components/__tests__/`
+
+**button.test.tsx** and related component tests
+
+- Button component rendering and interaction
+- Card component rendering and styling
+
+#### Home Screen (40 tests)
+
+Located in `app/screens/__tests__/`
+
+**HomeScreen.test.tsx** (40 tests: TC-01 to TC-40)
+
+- Initial rendering and loading state
+- Greeting display based on time of day (morning, afternoon, evening)
+- User name display in greeting
+- Next medication card rendering
+- Navigation to medication detail from next card
+- Tomorrow's medication display when all today's are taken
+- Progress tracking display (taken/total doses)
+- Today's medications list with all scheduled times
+- Medication status badges (Taken, Pending, Missed)
+- Medication sorting by time
+- Status update modal functionality
+- Status options based on time (future vs past medications)
+- Modal interactions (open, cancel, confirm)
+- Status updates with database integration
+- Empty state handling (no medications)
+- Error handling (failed API calls, null user)
+- Data handling (missing fdaData, missing todayStatus)
 
 #### Profile Screens (22 tests)
 
@@ -104,7 +137,7 @@ Located in `app/screens/prescriptions/__tests__/` and `app/screens/__tests__/`
 - Progress percentage for time-limited medications
 - Handling missing or incomplete data
 
-### Service Tests (30 tests)
+### Service Tests (42 tests)
 
 Located in `app/services/__tests__/`
 
@@ -127,6 +160,14 @@ Located in `app/services/__tests__/`
 - Real-time subscriptions
 - Error handling for invalid data
 
+**notificationService.test.ts** (12 tests)
+
+- Permission requests and status checking
+- Notification scheduling with triggers
+- Notification cancellation (single and all)
+- Error handling for scheduling failures
+- Android-specific notification channel setup
+
 ## Running Tests
 
 ### Run All Tests
@@ -142,6 +183,9 @@ npm test
 npm test ProfileScreen
 npm test EditProfileScreen
 
+# Home Screen Tests
+npm test HomeScreen
+
 # Prescription Screen Tests
 npm test MedicationSearchScreen
 npm test MedicationDetailScreen
@@ -153,6 +197,7 @@ npm test MedicationViewScreen
 # Service Tests
 npm test authService
 npm test medicationService
+npm test notificationService
 ```
 
 ### Run with Coverage
@@ -189,25 +234,27 @@ The HTML report provides:
 
 **Current Coverage:**
 
-- **Overall: 82.14%** (statements), 76.05% (branches), 78.4% (functions), 82.35% (lines)
+- **Overall: 76.11%** (statements), 73.18% (branches), 77.65% (functions), 76.21% (lines)
 - **Components**: 100% coverage
   - button.tsx: 100%
   - card.tsx: 100%
-- **Screens**: 84.76% coverage
-  - PrescriptionsScreen: 88.75%
-  - ProfileScreen: 72%
-- **Prescription Screens**: 87.67% coverage
-  - MedicationConfirmScreen: 95.23%
-  - MedicationDetailScreen: 82.35%
-  - MedicationScheduleScreen: 80.15%
-  - MedicationSearchScreen: 88.88%
-  - MedicationViewScreen: 95.94%
-- **Profile Screens**: 78.94% coverage
-  - EditProfileScreen: 78.94%
-- **Services**: 72.85% coverage
+- **Screens**: 92.13% coverage
+  - HomeScreen: 96.09%
+  - PrescriptionsScreen: 89.74%
+  - ProfileScreen: 78.26%
+- **Prescription Screens**: 88.26% coverage
+  - MedicationConfirmScreen: 93.33%
+  - MedicationDetailScreen: 84.84%
+  - MedicationScheduleScreen: 82.23%
+  - MedicationSearchScreen: 89.65%
+  - MedicationViewScreen: 97.22%
+- **Profile Screens**: 81.48% coverage
+  - EditProfileScreen: 81.48%
+- **Services**: 56.09% coverage
   - authService: 91.83%
-  - medicationService: 62.63%
-- **Contexts**: 30% (AuthContext - mostly Firebase integration code)
+  - medicationService: 45.71%
+  - notificationService: 69.49%
+- **Contexts**: 19.35% (AuthContext - mostly Firebase integration code)
 
 ### Watch Mode
 
@@ -224,12 +271,14 @@ npm test -- --watch
 
 ## Test Results Summary
 
-✅ **182 Total Tests Passing (100% Pass Rate)**
+✅ **245 Total Tests Passing (100% Pass Rate)**
 
-- Component Tests: 152 passing
+- Component Tests: 203 passing
+  - Basic Components: 11 tests (button, card)
+  - Home Screen: 40 tests (HomeScreen)
   - Profile Screens: 22 tests (ProfileScreen + EditProfileScreen)
   - Prescription Screens: 130 tests (6 screens)
-- Service Tests: 30 passing (17 auth + 13 medication)
+- Service Tests: 42 passing (17 auth + 13 medication + 12 notification)
 
 All tests verify:
 
@@ -246,3 +295,7 @@ All tests verify:
 - Navigation flows across all screens
 - Error handling and loading states
 - Backward compatibility with old data formats
+- Home screen greeting and time-based features
+- Real-time medication status tracking
+- Progress tracking and next medication display
+- Notification permissions and scheduling
