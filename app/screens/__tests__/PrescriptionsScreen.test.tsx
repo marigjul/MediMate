@@ -83,6 +83,8 @@ describe("PrescriptionsScreen", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset the mock implementation
+    (medicationService.getUserMedications as jest.Mock).mockReset();
   });
 
   const renderPrescriptionsScreen = (
@@ -531,6 +533,75 @@ describe("PrescriptionsScreen", () => {
         expect(getByText("Old Med")).toBeTruthy();
         expect(getByText("5/14 days")).toBeTruthy();
         expect(getByText("Time-limited")).toBeTruthy();
+      });
+    });
+  });
+
+  describe("Real-time Updates", () => {
+    it("TC-141: Should reload medications when screen gains focus (useFocusEffect)", async () => {
+      (medicationService.getUserMedications as jest.Mock).mockResolvedValue({
+        success: true,
+        medications: mockMedications,
+      });
+
+      renderPrescriptionsScreen();
+
+      await waitFor(() => {
+        expect(medicationService.getUserMedications).toHaveBeenCalledWith(
+          "test-user-123"
+        );
+        expect(medicationService.getUserMedications).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  describe("Empty State Call-to-Action", () => {
+    it("TC-142: Should show Add Medication button in empty state", async () => {
+      (medicationService.getUserMedications as jest.Mock).mockResolvedValue({
+        success: true,
+        medications: [],
+      });
+
+      const { getByText } = renderPrescriptionsScreen();
+
+      await waitFor(() => {
+        expect(getByText("No medications yet")).toBeTruthy();
+        expect(getByText("Add Medication")).toBeTruthy();
+      });
+    });
+
+    it("TC-143: Should navigate to add medication from empty state", async () => {
+      (medicationService.getUserMedications as jest.Mock).mockResolvedValue({
+        success: true,
+        medications: [],
+      });
+
+      const { getByText } = renderPrescriptionsScreen();
+
+      await waitFor(() => {
+        expect(getByText("No medications yet")).toBeTruthy();
+      });
+
+      const addButton = getByText("Add Medication");
+      fireEvent.press(addButton);
+
+      expect(mockNavigate).toHaveBeenCalledWith("MedicationSearch");
+    });
+
+    it("TC-144: Should show encouragement message in empty state", async () => {
+      (medicationService.getUserMedications as jest.Mock).mockResolvedValue({
+        success: true,
+        medications: [],
+      });
+
+      const { getByText } = renderPrescriptionsScreen();
+
+      await waitFor(() => {
+        expect(
+          getByText(
+            "Add your first medication to start tracking your prescriptions"
+          )
+        ).toBeTruthy();
       });
     });
   });

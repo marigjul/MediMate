@@ -50,6 +50,7 @@
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
+    "baseline-browser-mapping": "^2.9.14",
     "concurrently": "^8.2.2",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
