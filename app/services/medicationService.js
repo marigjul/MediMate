@@ -16,6 +16,90 @@ import { db } from "../config/firebase";
 const FDA_API_URL = "https://api.fda.gov/drug/label.json";
 const CACHE_DURATION_DAYS = 30;
 
+// Time validation utilities
+const isValidTime = (time) => {
+  if (!time || typeof time !== 'string') {
+    return false;
+  }
+  const timeRegex = /^\d{2}:\d{2}$/;
+  if (!timeRegex.test(time)) {
+    return false;
+  }
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60;
+};
+
+const validateScheduleData = (scheduleData) => {
+  const errors = [];
+  
+  // Validate dosage
+  if (!scheduleData.dosage || typeof scheduleData.dosage !== 'string' || !scheduleData.dosage.trim()) {
+    errors.push('Dosage is required');
+  }
+  
+  // Validate schedule type
+  if (!scheduleData['schedule.type'] || !['interval', 'specific_times'].includes(scheduleData['schedule.type'])) {
+    errors.push('Invalid schedule type');
+  }
+  
+  // Validate times array
+  if (!scheduleData['schedule.times'] || !Array.isArray(scheduleData['schedule.times']) || scheduleData['schedule.times'].length === 0) {
+    errors.push('At least one time is required');
+  } else {
+    // Validate each time
+    const invalidTimes = scheduleData['schedule.times'].filter(time => !isValidTime(time));
+    if (invalidTimes.length > 0) {
+      errors.push(`Invalid time format detected: ${invalidTimes.join(', ')}. Times must be in HH:MM format (00:00 - 23:59)`);
+    }
+    
+    // Check for duplicates
+    const uniqueTimes = new Set(scheduleData['schedule.times']);
+    if (uniqueTimes.size !== scheduleData['schedule.times'].length) {
+      errors.push('Duplicate times are not allowed');
+    }
+  }
+  
+  // Validate interval-specific fields
+  if (scheduleData['schedule.type'] === 'interval') {
+    if (!isValidTime(scheduleData['schedule.startTime'])) {
+      errors.push('Invalid start time format. Must be HH:MM (00:00 - 23:59)');
+    }
+    
+    const dosesPerDay = scheduleData['schedule.dosesPerDay'];
+    if (!dosesPerDay || !Number.isInteger(dosesPerDay) || dosesPerDay < 1 || dosesPerDay > 24) {
+      errors.push('Doses per day must be between 1 and 24');
+    }
+    
+    const hoursBetween = scheduleData['schedule.hoursBetweenDoses'];
+    if (!hoursBetween || !Number.isInteger(hoursBetween) || hoursBetween < 1 || hoursBetween > 24) {
+      errors.push('Hours between doses must be between 1 and 24');
+    }
+  }
+  
+  // Validate duration
+  if (!scheduleData['duration.type'] || !['permanent', 'limited'].includes(scheduleData['duration.type'])) {
+    errors.push('Invalid duration type');
+  }
+  
+  if (scheduleData['duration.type'] === 'limited') {
+    const days = scheduleData['duration.days'];
+    if (!days || !Number.isInteger(days) || days < 1) {
+      errors.push('Duration days must be at least 1');
+    }
+  }
+  
+  // Validate refill reminder if present and is a number (not deleteField or undefined)
+  if (scheduleData.refillReminder !== undefined && 
+      scheduleData.refillReminder !== null && 
+      typeof scheduleData.refillReminder === 'number') {
+    if (!Number.isInteger(scheduleData.refillReminder) || scheduleData.refillReminder < 1) {
+      errors.push('Refill reminder must be at least 1 day');
+    }
+  }
+  
+  return errors;
+};
+
 export const medicationService = {
   // Search for multiple medication suggestions (for search screen)
   searchMedicationSuggestions: async (searchTerm) => {
@@ -135,6 +219,15 @@ export const medicationService = {
   // Add medication with FDA data
   addMedicationWithFDA: async (userId, medicationName, scheduleData) => {
     try {
+      // Validate schedule data before proceeding
+      const validationErrors = validateScheduleData(scheduleData);
+      if (validationErrors.length > 0) {
+        return { 
+          success: false, 
+          error: `Validation failed: ${validationErrors.join('; ')}` 
+        };
+      }
+
       // Fetch FDA data first
       const fdaResult = await medicationService.searchMedicationFromFDA(
         medicationName
@@ -229,6 +322,17 @@ export const medicationService = {
   // Update medication
   updateMedication: async (medicationId, updates) => {
     try {
+      // If updates contain schedule data, validate it
+      if (updates.dosage || updates['schedule.type'] || updates['schedule.times']) {
+        const validationErrors = validateScheduleData(updates);
+        if (validationErrors.length > 0) {
+          return { 
+            success: false, 
+            error: `Validation failed: ${validationErrors.join('; ')}` 
+          };
+        }
+      }
+
       const medicationRef = doc(db, "medications", medicationId);
       await updateDoc(medicationRef, {
         ...updates,

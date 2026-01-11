@@ -18,7 +18,9 @@ import { medicationService } from "../../services/medicationService";
 import type { PrescriptionsStackParamList } from "../../types/navigation";
 
 // Icons
-const BackIcon = () => <Text style={styles.backIcon}>←</Text>;
+const BackIcon = () => (
+  <MaterialCommunityIcons name="chevron-left" size={28} color="#3B82F6" />
+);
 const ChevronRightIcon = () => <Text style={styles.chevron}>›</Text>;
 
 type MedicationSearchNavigationProp = NativeStackNavigationProp<
@@ -243,11 +245,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 16,
-  },
-  backIcon: {
-    fontSize: 24,
-    color: "#3B82F6",
-    marginRight: 4,
   },
   backText: {
     fontSize: 16,

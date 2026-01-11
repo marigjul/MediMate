@@ -108,10 +108,18 @@ describe("MedicationService - MediMate (Unit Tests)", () => {
       addDoc.mockResolvedValueOnce({ id: 'cache-id' })
               .mockResolvedValueOnce({ id: 'med-id-123' });
 
+      const validSchedule = {
+        dosage: "500mg",
+        "schedule.type": "specific_times",
+        "schedule.times": ["09:00"],
+        "schedule.frequency": "1x daily",
+        "duration.type": "permanent",
+      };
+
       const result = await medicationService.addMedicationWithFDA(
         "user-123",
         "aspirin",
-        { frequency: "daily", times: ["09:00"] }
+        validSchedule
       );
 
       expect(result.success).toBe(true);
@@ -120,6 +128,7 @@ describe("MedicationService - MediMate (Unit Tests)", () => {
     });
 
     test("TC-26: Should add medication manually", async () => {
+      addDoc.mockClear();
       addDoc.mockResolvedValue({ id: 'med-manual-123' });
 
       const result = await medicationService.addMedication("user-123", {
@@ -173,6 +182,7 @@ describe("MedicationService - MediMate (Unit Tests)", () => {
 
   describe("Medication Tracking", () => {
     test("TC-30: Should record medication as taken", async () => {
+      addDoc.mockClear();
       addDoc.mockResolvedValue({ id: 'log-123' });
 
       const result = await medicationService.recordMedicationTaken('med-123', 'taken');
@@ -227,14 +237,213 @@ describe("MedicationService - MediMate (Unit Tests)", () => {
         status: 500,
       });
 
+      const validSchedule = {
+        dosage: "500mg",
+        "schedule.type": "specific_times",
+        "schedule.times": ["09:00"],
+        "schedule.frequency": "1x daily",
+        "duration.type": "permanent",
+      };
+
       const result = await medicationService.addMedicationWithFDA(
         "user-123",
         "nonexistent",
-        { frequency: "daily", times: ["09:00"] }
+        validSchedule
       );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Could not fetch medication info");
+    });
+  });
+
+  describe("Time Validation", () => {
+    test("TC-35: Should reject invalid time format", async () => {
+      getDocs.mockResolvedValue({
+        empty: true,
+        docs: [],
+      });
+
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          results: [{
+            openfda: {
+              brand_name: ["Test Med"],
+              generic_name: ["test"],
+            },
+          }],
+        }),
+      });
+
+      const invalidSchedule = {
+        dosage: "500mg",
+        "schedule.type": "specific_times",
+        "schedule.times": ["25:00", "09:00"], // Invalid hour
+        "schedule.frequency": "2x daily",
+        "duration.type": "permanent",
+      };
+
+      const result = await medicationService.addMedicationWithFDA(
+        "user-123",
+        "Test Med",
+        invalidSchedule
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid time format");
+    });
+
+    test("TC-36: Should reject times with invalid minutes", async () => {
+      getDocs.mockResolvedValue({
+        empty: true,
+        docs: [],
+      });
+
+      const invalidSchedule = {
+        dosage: "500mg",
+        "schedule.type": "specific_times",
+        "schedule.times": ["09:70"], // Invalid minutes
+        "schedule.frequency": "1x daily",
+        "duration.type": "permanent",
+      };
+
+      const result = await medicationService.addMedicationWithFDA(
+        "user-123",
+        "Test Med",
+        invalidSchedule
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid time format");
+    });
+
+    test("TC-37: Should reject duplicate times", async () => {
+      getDocs.mockResolvedValue({
+        empty: true,
+        docs: [],
+      });
+
+      const invalidSchedule = {
+        dosage: "500mg",
+        "schedule.type": "specific_times",
+        "schedule.times": ["09:00", "09:00"], // Duplicate
+        "schedule.frequency": "2x daily",
+        "duration.type": "permanent",
+      };
+
+      const result = await medicationService.addMedicationWithFDA(
+        "user-123",
+        "Test Med",
+        invalidSchedule
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Duplicate times");
+    });
+
+    test("TC-38: Should accept valid times", async () => {
+      getDocs.mockResolvedValue({
+        empty: true,
+        docs: [],
+      });
+
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          results: [{
+            openfda: {
+              brand_name: ["Test Med"],
+              generic_name: ["test"],
+            },
+          }],
+        }),
+      });
+
+      addDoc.mockResolvedValue({ id: "med-123" });
+
+      const validSchedule = {
+        dosage: "500mg",
+        "schedule.type": "specific_times",
+        "schedule.times": ["09:00", "14:00", "21:00"],
+        "schedule.frequency": "3x daily",
+        "duration.type": "permanent",
+      };
+
+      const result = await medicationService.addMedicationWithFDA(
+        "user-123",
+        "Test Med",
+        validSchedule
+      );
+
+      expect(result.success).toBe(true);
+      expect(addDoc).toHaveBeenCalled();
+    });
+
+    test("TC-39: Should validate interval schedule times", async () => {
+      getDocs.mockResolvedValue({
+        empty: true,
+        docs: [],
+      });
+
+      const invalidSchedule = {
+        dosage: "500mg",
+        "schedule.type": "interval",
+        "schedule.startTime": "25:00", // Invalid
+        "schedule.dosesPerDay": 3,
+        "schedule.hoursBetweenDoses": 8,
+        "schedule.times": ["09:00", "17:00", "01:00"],
+        "schedule.frequency": "3x daily",
+        "duration.type": "permanent",
+      };
+
+      const result = await medicationService.addMedicationWithFDA(
+        "user-123",
+        "Test Med",
+        invalidSchedule
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid start time");
+    });
+
+    test("TC-40: Should allow updating to time-limited without refill reminder validation", async () => {
+      updateDoc.mockResolvedValue();
+
+      // Simulate deleteField() with a special marker object
+      const mockDeleteField = { _methodName: 'FieldValue.delete' };
+
+      const updates = {
+        dosage: "500mg",
+        "schedule.type": "specific_times",
+        "schedule.times": ["09:00", "17:00"],
+        "schedule.frequency": "2x daily",
+        "duration.type": "limited",
+        "duration.days": 14,
+        refillReminder: mockDeleteField, // This should not trigger validation
+      };
+
+      const result = await medicationService.updateMedication("med-123", updates);
+
+      expect(result.success).toBe(true);
+      expect(updateDoc).toHaveBeenCalled();
+    });
+
+    test("TC-41: Should validate refill reminder only when it's a number", async () => {
+      updateDoc.mockResolvedValue();
+
+      const updates = {
+        dosage: "500mg",
+        "schedule.type": "specific_times",
+        "schedule.times": ["09:00"],
+        "schedule.frequency": "1x daily",
+        "duration.type": "permanent",
+        refillReminder: 0, // Invalid number - should fail
+      };
+
+      const result = await medicationService.updateMedication("med-123", updates);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Refill reminder must be at least 1 day");
     });
   });
 });

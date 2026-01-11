@@ -91,7 +91,7 @@ describe("MedicationScheduleScreen", () => {
       const dosageInput = getByPlaceholderText("Enter dosage");
       fireEvent.changeText(dosageInput, "500mg");
 
-      const startTimeInput = getByPlaceholderText("e.g. 09:00");
+      const startTimeInput = getByPlaceholderText("09:00");
       fireEvent.changeText(startTimeInput, "invalid");
 
       const continueButton = getByText("Continue to Review");
@@ -99,7 +99,7 @@ describe("MedicationScheduleScreen", () => {
 
       await waitFor(() => {
         expect(
-          getByText("Please enter start time in HH:MM format (e.g., 09:00)")
+          getByText("Please enter a valid start time (00:00 - 23:59)")
         ).toBeTruthy();
       });
     });
@@ -112,7 +112,7 @@ describe("MedicationScheduleScreen", () => {
       const dosageInput = getByPlaceholderText("Enter dosage");
       fireEvent.changeText(dosageInput, "500mg");
 
-      const startTimeInput = getByPlaceholderText("e.g. 09:00");
+      const startTimeInput = getByPlaceholderText("09:00");
       fireEvent.changeText(startTimeInput, "09:00");
 
       const dosesInput = getByPlaceholderText("e.g. 3");
@@ -134,7 +134,7 @@ describe("MedicationScheduleScreen", () => {
       const dosageInput = getByPlaceholderText("Enter dosage");
       fireEvent.changeText(dosageInput, "500mg");
 
-      const startTimeInput = getByPlaceholderText("e.g. 09:00");
+      const startTimeInput = getByPlaceholderText("09:00");
       fireEvent.changeText(startTimeInput, "09:00");
 
       const dosesInput = getByPlaceholderText("e.g. 3");
@@ -159,7 +159,7 @@ describe("MedicationScheduleScreen", () => {
       const dosageInput = getByPlaceholderText("Enter dosage");
       fireEvent.changeText(dosageInput, "500mg");
 
-      const startTimeInput = getByPlaceholderText("e.g. 09:00");
+      const startTimeInput = getByPlaceholderText("09:00");
       fireEvent.changeText(startTimeInput, "09:00");
 
       const dosesInput = getByPlaceholderText("e.g. 3");
@@ -188,7 +188,7 @@ describe("MedicationScheduleScreen", () => {
       const dosageInput = getByPlaceholderText("Enter dosage");
       fireEvent.changeText(dosageInput, "500mg");
 
-      const startTimeInput = getByPlaceholderText("e.g. 09:00");
+      const startTimeInput = getByPlaceholderText("09:00");
       fireEvent.changeText(startTimeInput, "09:00");
 
       const dosesInput = getByPlaceholderText("e.g. 3");
@@ -206,6 +206,114 @@ describe("MedicationScheduleScreen", () => {
 
       await waitFor(() => {
         expect(getByText("Please enter valid number of days")).toBeTruthy();
+      });
+    });
+
+    it("TC-71a: Should reject invalid time values like 25:00", async () => {
+      const { getByPlaceholderText, getByText } = render(
+        <MedicationScheduleScreen />
+      );
+
+      const dosageInput = getByPlaceholderText("Enter dosage");
+      fireEvent.changeText(dosageInput, "500mg");
+
+      const startTimeInput = getByPlaceholderText("09:00");
+      fireEvent.changeText(startTimeInput, "25:00");
+
+      const dosesInput = getByPlaceholderText("e.g. 3");
+      fireEvent.changeText(dosesInput, "2");
+
+      const hoursInput = getByPlaceholderText("e.g. 8");
+      fireEvent.changeText(hoursInput, "6");
+
+      const continueButton = getByText("Continue to Review");
+      fireEvent.press(continueButton);
+
+      await waitFor(() => {
+        expect(
+          getByText("Please enter a valid start time (00:00 - 23:59)")
+        ).toBeTruthy();
+      });
+    });
+
+    it("TC-71b: Should reject invalid minutes like 09:70", async () => {
+      const { getByPlaceholderText, getByText } = render(
+        <MedicationScheduleScreen />
+      );
+
+      const dosageInput = getByPlaceholderText("Enter dosage");
+      fireEvent.changeText(dosageInput, "500mg");
+
+      const startTimeInput = getByPlaceholderText("09:00");
+      fireEvent.changeText(startTimeInput, "09:70");
+
+      const dosesInput = getByPlaceholderText("e.g. 3");
+      fireEvent.changeText(dosesInput, "2");
+
+      const hoursInput = getByPlaceholderText("e.g. 8");
+      fireEvent.changeText(hoursInput, "6");
+
+      const continueButton = getByText("Continue to Review");
+      fireEvent.press(continueButton);
+
+      await waitFor(() => {
+        expect(
+          getByText("Please enter a valid start time (00:00 - 23:59)")
+        ).toBeTruthy();
+      });
+    });
+
+    it("TC-71c: Should validate specific times format", async () => {
+      const { getByPlaceholderText, getByText } = render(
+        <MedicationScheduleScreen />
+      );
+
+      // Switch to specific times
+      const specificTimesButton = getByText("Specific Times");
+      fireEvent.press(specificTimesButton);
+
+      const dosageInput = getByPlaceholderText("Enter dosage");
+      fireEvent.changeText(dosageInput, "500mg");
+
+      const timeInput = getByPlaceholderText("09:00");
+      fireEvent.changeText(timeInput, "invalid");
+
+      const continueButton = getByText("Continue to Review");
+      fireEvent.press(continueButton);
+
+      await waitFor(() => {
+        expect(
+          getByText("Please enter all times in valid format (00:00 - 23:59)")
+        ).toBeTruthy();
+      });
+    });
+
+    it("TC-71d: Should detect duplicate times", async () => {
+      const { getByPlaceholderText, getByText, getAllByPlaceholderText } = render(
+        <MedicationScheduleScreen />
+      );
+
+      // Switch to specific times
+      const specificTimesButton = getByText("Specific Times");
+      fireEvent.press(specificTimesButton);
+
+      const dosageInput = getByPlaceholderText("Enter dosage");
+      fireEvent.changeText(dosageInput, "500mg");
+
+      // Add a second time
+      const addButton = getByText("Add Time");
+      fireEvent.press(addButton);
+
+      // Set both times to the same value
+      const timeInputs = getAllByPlaceholderText("09:00");
+      fireEvent.changeText(timeInputs[0], "10:00");
+      fireEvent.changeText(timeInputs[1], "10:00");
+
+      const continueButton = getByText("Continue to Review");
+      fireEvent.press(continueButton);
+
+      await waitFor(() => {
+        expect(getByText("Please remove duplicate times")).toBeTruthy();
       });
     });
   });
@@ -307,7 +415,7 @@ describe("MedicationScheduleScreen", () => {
       const dosageInput = getByPlaceholderText("Enter dosage");
       fireEvent.changeText(dosageInput, "500mg");
 
-      const startTimeInput = getByPlaceholderText("e.g. 09:00");
+      const startTimeInput = getByPlaceholderText("09:00");
       fireEvent.changeText(startTimeInput, "09:00");
 
       const dosesInput = getByPlaceholderText("e.g. 3");
@@ -363,7 +471,7 @@ describe("MedicationScheduleScreen", () => {
       const dosageInput = getByPlaceholderText("Enter dosage");
       fireEvent.changeText(dosageInput, "500mg");
 
-      const startTimeInput = getByPlaceholderText("e.g. 09:00");
+      const startTimeInput = getByPlaceholderText("09:00");
       fireEvent.changeText(startTimeInput, "09:00");
 
       const dosesInput = getByPlaceholderText("e.g. 3");
