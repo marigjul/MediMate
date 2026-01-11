@@ -435,4 +435,217 @@ describe("MedicationConfirmScreen", () => {
       });
     });
   });
+
+  describe("Edit Details Button", () => {
+    it("TC-114: Should navigate back when Edit Details button is pressed", () => {
+      const { getByText } = renderConfirmScreen();
+
+      const editButton = getByText("Edit Details");
+      fireEvent.press(editButton);
+
+      expect(mockGoBack).toHaveBeenCalled();
+    });
+
+    it("TC-115: Should have Edit Details button visible in new medication mode", () => {
+      const { getByText } = renderConfirmScreen();
+
+      expect(getByText("Edit Details")).toBeTruthy();
+    });
+
+    it("TC-116: Should have Edit Details button visible in edit mode", () => {
+      (mockRoute.params as any).existingMedicationId = "med-123";
+
+      const { getByText } = renderConfirmScreen();
+
+      expect(getByText("Edit Details")).toBeTruthy();
+    });
+  });
+
+  describe("Schedule Type Display", () => {
+    it("TC-117: Should display interval schedule with frequency and times", () => {
+      const { getByText } = renderConfirmScreen();
+
+      expect(getByText("2x daily (every 8h)")).toBeTruthy();
+      expect(getByText("09:00, 17:00")).toBeTruthy();
+    });
+
+    it("TC-118: Should display specific times schedule correctly", () => {
+      (mockRoute.params.scheduleData.schedule as any) = {
+        type: "specific_times",
+        times: ["08:00", "14:00", "20:00"],
+        frequency: "3x daily",
+      };
+
+      const { getByText } = renderConfirmScreen();
+
+      expect(getByText("3x daily")).toBeTruthy();
+      expect(getByText("08:00, 14:00, 20:00")).toBeTruthy();
+    });
+
+    it("TC-119: Should display interval schedule with multiple doses", () => {
+      (mockRoute.params.scheduleData.schedule as any) = {
+        type: "interval",
+        startTime: "06:00",
+        dosesPerDay: 4,
+        hoursBetweenDoses: 6,
+        times: ["06:00", "12:00", "18:00", "00:00"],
+        frequency: "4x daily (every 6h)",
+      };
+
+      const { getByText } = renderConfirmScreen();
+
+      expect(getByText("4x daily (every 6h)")).toBeTruthy();
+      expect(getByText("06:00, 12:00, 18:00, 00:00")).toBeTruthy();
+    });
+
+    it("TC-120: Should display single dose interval schedule", () => {
+      (mockRoute.params.scheduleData.schedule as any) = {
+        type: "interval",
+        startTime: "09:00",
+        dosesPerDay: 1,
+        hoursBetweenDoses: 24,
+        times: ["09:00"],
+        frequency: "Once daily",
+      };
+
+      const { getByText } = renderConfirmScreen();
+
+      expect(getByText("Once daily")).toBeTruthy();
+      expect(getByText("09:00")).toBeTruthy();
+    });
+
+    it("TC-121: Should display specific times with single time", () => {
+      (mockRoute.params.scheduleData.schedule as any) = {
+        type: "specific_times",
+        times: ["21:00"],
+        frequency: "Once daily",
+      };
+
+      const { getByText } = renderConfirmScreen();
+
+      expect(getByText("Once daily")).toBeTruthy();
+      expect(getByText("21:00")).toBeTruthy();
+    });
+
+    it("TC-122: Should handle schedule without frequency field", () => {
+      (mockRoute.params.scheduleData.schedule as any) = {
+        type: "specific_times",
+        times: ["09:00", "21:00"],
+      };
+
+      const { getByText } = renderConfirmScreen();
+
+      // Should still display times even without frequency
+      expect(getByText("09:00, 21:00")).toBeTruthy();
+    });
+  });
+
+  describe("Refill Reminder Display Logic", () => {
+    it("TC-123: Should display refill reminder for permanent medication", () => {
+      const { getByText } = renderConfirmScreen();
+
+      expect(getByText("Every 30 days")).toBeTruthy();
+    });
+
+    it("TC-124: Should not display refill reminder for time-limited medication", () => {
+      (mockRoute.params.scheduleData.duration as any) = {
+        type: "limited",
+        days: 14,
+      };
+      (mockRoute.params.scheduleData as any).refillReminder = undefined;
+
+      const { queryByText } = renderConfirmScreen();
+
+      expect(queryByText("Every 30 days")).toBeNull();
+      expect(queryByText("Refill Reminder")).toBeNull();
+    });
+
+    it("TC-125: Should display different refill reminder values", () => {
+      mockRoute.params.scheduleData.refillReminder = 60;
+
+      const { getByText } = renderConfirmScreen();
+
+      expect(getByText("Every 60 days")).toBeTruthy();
+    });
+
+    it("TC-126: Should display refill reminder at 7 days", () => {
+      mockRoute.params.scheduleData.refillReminder = 7;
+
+      const { getByText } = renderConfirmScreen();
+
+      expect(getByText("Every 7 days")).toBeTruthy();
+    });
+
+    it("TC-127: Should not display refill reminder when not set for permanent medication", () => {
+      (mockRoute.params.scheduleData as any).refillReminder = undefined;
+
+      const { getByText, queryByText } = renderConfirmScreen();
+
+      // Should show ongoing duration but not refill reminder
+      expect(getByText("Ongoing (no end date)")).toBeTruthy();
+      expect(queryByText(/Every.*days/)).toBeNull();
+    });
+
+    it("TC-128: Should display time-limited duration without refill reminder", () => {
+      (mockRoute.params.scheduleData.duration as any) = {
+        type: "limited",
+        days: 10,
+      };
+      (mockRoute.params.scheduleData as any).refillReminder = undefined;
+
+      const { getByText, queryByText } = renderConfirmScreen();
+
+      // Should show duration but no refill reminder
+      expect(getByText("10 days")).toBeTruthy();
+      expect(queryByText("Refill Reminder")).toBeNull();
+    });
+  });
+
+  describe("Complete Data Display", () => {
+    it("TC-129: Should display all required fields for permanent medication", () => {
+      const { getByText } = renderConfirmScreen();
+
+      // Medication info
+      expect(getByText("Aspirin")).toBeTruthy();
+      expect(getByText("acetylsalicylic acid")).toBeTruthy();
+      
+      // Dosage
+      expect(getByText("500mg")).toBeTruthy();
+      
+      // Schedule
+      expect(getByText("2x daily (every 8h)")).toBeTruthy();
+      expect(getByText("09:00, 17:00")).toBeTruthy();
+      
+      // Duration
+      expect(getByText("Ongoing (no end date)")).toBeTruthy();
+      
+      // Refill
+      expect(getByText("Every 30 days")).toBeTruthy();
+    });
+
+    it("TC-130: Should display all required fields for time-limited medication", () => {
+      (mockRoute.params.scheduleData.duration as any) = {
+        type: "limited",
+        days: 14,
+      };
+      (mockRoute.params.scheduleData as any).refillReminder = undefined;
+
+      const { getByText, queryByText } = renderConfirmScreen();
+
+      // Medication info
+      expect(getByText("Aspirin")).toBeTruthy();
+      expect(getByText("acetylsalicylic acid")).toBeTruthy();
+      
+      // Dosage
+      expect(getByText("500mg")).toBeTruthy();
+      
+      // Schedule
+      expect(getByText("2x daily (every 8h)")).toBeTruthy();
+      expect(getByText("09:00, 17:00")).toBeTruthy();
+      
+      // Duration (no refill for limited)
+      expect(getByText("14 days")).toBeTruthy();
+      expect(queryByText("Refill Reminder")).toBeNull();
+    });
+  });
 });

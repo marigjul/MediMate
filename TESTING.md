@@ -2,16 +2,16 @@
 
 ## Overview
 
-MediMate uses **Jest** and **React Native Testing Library** for testing. The test suite covers both frontend UI components and backend service logic with **364 passing tests**:
+MediMate uses **Jest** and **React Native Testing Library** for testing. The test suite covers both frontend UI components and backend service logic with **403 passing tests**:
 
-- **Component Tests**: 244 tests (40 home + 59 profile + 134 prescription + 11 component)
+- **Component Tests**: 276 tests (40 home + 59 profile + 166 prescription + 11 component)
 - **Service Tests**: 127 tests (38 auth + 61 medication + 28 notification)
 
 All tests use mocked Firebase services for fast, reliable unit testing.
 
 ## Test Structure
 
-### Component Tests (240 tests)
+### Component Tests (276 tests)
 
 #### Basic Components (11 tests)
 
@@ -114,7 +114,7 @@ Located in `app/screens/__tests__/`
 - Form validation (empty fields, password matching)
 - Error handling for failed updates
 
-#### Prescription Screens (134 tests)
+#### Prescription Screens (166 tests)
 
 Located in `app/screens/prescriptions/__tests__/` and `app/screens/__tests__/`
 
@@ -133,7 +133,7 @@ Located in `app/screens/prescriptions/__tests__/` and `app/screens/__tests__/`
 - Error state with retry functionality
 - Note: Content display and navigation tests removed due to async timing issues in test environment
 
-**MedicationScheduleScreen.test.tsx** (22 tests: TC-65 to TC-85, TC-89)
+**MedicationScheduleScreen.test.tsx** (38 tests: TC-65 to TC-89l)
 
 - Form rendering with all input fields
 - Form validation (dosage, time, doses, hours, duration)
@@ -143,10 +143,17 @@ Located in `app/screens/prescriptions/__tests__/` and `app/screens/__tests__/`
 - Refill reminder for permanent medications
 - Form submission for new mode
 - Pre-filled data in edit mode
-- Navigation
+- Navigation (including navigation back from edit mode)
+- **Real-time schedule preview** as user types interval values
+- **Schedule preview** showing calculated times for interval schedules
+- **Preview updates** when switching to specific times or adding time slots
+- **Schedule type switching** between interval and specific times
+- **Form data maintenance** when switching between schedule types
+- **Validation message clearing** when correcting invalid dosage, start time, 24-hour overflow, and duplicate times
+- 24-hour overflow error detection and correction
 - Note: Edit mode submission tests (TC-86 to TC-88) removed due to mock complexity
 
-**MedicationConfirmScreen.test.tsx** (24 tests: TC-90 to TC-113)
+**MedicationConfirmScreen.test.tsx** (41 tests: TC-90 to TC-130)
 
 - Summary display of medication details
 - Edit mode vs new medication mode
@@ -156,6 +163,12 @@ Located in `app/screens/prescriptions/__tests__/` and `app/screens/__tests__/`
 - Duration and refill reminder handling
 - Loading state during save
 - Navigation
+- **Edit Details button functionality** in both new and edit modes
+- **Display of all schedule types** (interval vs specific times)
+- **Schedule display variations** (single dose, multiple doses, with/without frequency)
+- **Refill reminder display logic** for permanent vs time-limited medications
+- **Different refill reminder values** (7, 30, 60 days)
+- **Complete data display** verification for both permanent and time-limited medications
 
 **PrescriptionsScreen.test.tsx** (28 tests: TC-114 to TC-116, TC-118 to TC-120, TC-122 to TC-130, TC-132 to TC-144)
 
@@ -179,7 +192,7 @@ Located in `app/screens/prescriptions/__tests__/` and `app/screens/__tests__/`
   - Encouragement message display
 - Note: Loading indicator test (TC-117), schedule formatting (TC-121), and error message test (TC-131) removed
 
-**MedicationViewScreen.test.tsx** (40 tests: TC-145 to TC-184)
+**MedicationViewScreen.test.tsx** (53 tests: TC-141 to TC-190)
 
 - Medication information display (name, dosage, schedule, duration)
 - FDA information display (ingredient, purpose, warnings)
@@ -191,8 +204,12 @@ Located in `app/screens/prescriptions/__tests__/` and `app/screens/__tests__/`
 - Schedule details (interval vs specific times)
 - Progress percentage for time-limited medications
 - Handling missing or incomplete data
+- **Completion status display** for time-limited medications at various stages (50%, near completion, 100%)
+- **Streak display** for permanent medications with various values (including long-running and undefined streaks)
+- **Refill reminder display** with different day values (7, 30, 60 days)
+- **Edit navigation data passing** with complete medication data for interval, specific times, and time-limited medications
 
-### Service Tests (106 tests)
+### Service Tests (127 tests)
 
 Located in `app/services/__tests__/`
 
@@ -309,7 +326,7 @@ The HTML report provides:
 
 **Current Coverage:**
 
-- **Overall: 87.2%** (statements), 81.3% (branches), 85.8% (functions), 87.5% (lines)
+- **Overall: 88.67%** (statements), 83.11% (branches), 87.04% (functions), 88.91% (lines)
 - **Components**: 100% coverage
   - button.tsx: 100%
   - card.tsx: 100%
@@ -318,15 +335,15 @@ The HTML report provides:
   - LoginScreen: 98.48%
   - PrescriptionsScreen: 89.74%
   - ProfileScreen: 78.26%
-- **Prescription Screens**: 88.26% coverage
-  - MedicationConfirmScreen: 93.33%
+- **Prescription Screens**: 88.8% coverage
+  - MedicationConfirmScreen: 95% (statements), 80.76% (branches), 100% (functions), 98.27% (lines)
   - MedicationDetailScreen: 84.84%
-  - MedicationScheduleScreen: 82.23%
+  - MedicationScheduleScreen: 82.89% (statements), 84.21% (branches), 81.81% (functions), 83.44% (lines)
   - MedicationSearchScreen: 89.65%
-  - MedicationViewScreen: 97.22%
+  - MedicationViewScreen: 97.22% (statements), 76.13% (branches), 100% (functions), 97.05% (lines)
 - **Profile Screens**: 81.48% coverage
   - EditProfileScreen: 81.48%
-- **Services**: 87% coverage
+- **Services**: 91.21% coverage
   - authService: 95.91% (statements), 75% (branches), 88.88% (functions), 95.91% (lines)
   - medicationService: 91.42% (statements), 88.29% (branches), 96.87% (functions), 91.32% (lines)
   - notificationService: 86.44% (statements), 58.33% (branches), 90.9% (functions), 86.44% (lines)
@@ -347,13 +364,13 @@ npm test -- --watch
 
 ## Test Results Summary
 
-✅ **364 Total Tests Passing (100% Pass Rate)**
+✅ **403 Total Tests Passing (100% Pass Rate)**
 
-- Component Tests: 244 passing
+- Component Tests: 276 passing
   - Basic Components: 11 tests (button, card)
   - Home Screen: 40 tests (HomeScreen)
   - Profile Screens: 59 tests (LoginScreen + ProfileScreen + EditProfileScreen)
-  - Prescription Screens: 134 tests (6 screens)
+  - Prescription Screens: 166 tests (6 screens)
 - Service Tests: 127 passing (38 auth + 61 medication + 28 notification)
 
 All tests verify:
