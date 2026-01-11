@@ -126,7 +126,6 @@ export const notificationService = {
           },
         },
         trigger: {
-          type: 'calendar' as const,
           hour: hours,
           minute: minutes,
           repeats: true,
