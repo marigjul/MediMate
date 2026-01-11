@@ -95,7 +95,20 @@ export function MedicationNotificationProvider({ children }: { children: React.R
     };
 
     scheduleNotifications();
-  }, [medications, permissionsGranted, user]);
+  }, [
+    // Only reschedule when the actual medication list structure changes,
+    // not when status fields (todayStatus, statusDate) are updated
+    medications.length,
+    JSON.stringify(medications.map(m => ({
+      id: m.id,
+      times: m.schedule?.times,
+      medicationName: m.medicationName,
+      brandName: m.fdaData?.brandName,
+      dosage: m.dosage || m.schedule?.dosage,
+    }))),
+    permissionsGranted,
+    user,
+  ]);
 
   // Handle notification taps
   useEffect(() => {
@@ -117,11 +130,11 @@ export function MedicationNotificationProvider({ children }: { children: React.R
     return () => subscription.remove();
   }, []);
 
-  // Handle notifications received while app is in foreground (no alert shown due to handler config)
+  // Handle notifications received while app is in foreground (no alert/sound shown due to handler config)
   useEffect(() => {
     const subscription = notificationService.addNotificationReceivedListener((notification) => {
-      // Notification received while app is open - do nothing as per requirements
-      console.log('Notification received while app is open (not shown):', notification);
+      // Notification received while app is open - silently ignored
+      // No action needed as notifications should only alert when app is in background
     });
 
     return () => subscription.remove();

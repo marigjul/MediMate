@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: false, // Don't show alert when app is open
-    shouldPlaySound: true,
+    shouldPlaySound: false, // Don't play sound when app is open
     shouldSetBadge: true,
     shouldShowBanner: false,
     shouldShowList: false,
@@ -42,7 +42,22 @@ export const notificationService = {
           vibrationPattern: [0, 250, 250, 250],
           lightColor: '#3B82F6',
           sound: 'default',
+          enableVibrate: true,
+          showBadge: true,
         });
+
+        // Request exact alarm permission for Android 12+ (API 31+)
+        if (Platform.Version && Platform.Version >= 31) {
+          try {
+            await Notifications.requestPermissionsAsync({
+              android: {
+                allowExactAlarms: true,
+              },
+            });
+          } catch (error: any) {
+            console.warn('Could not request exact alarm permission:', error.message);
+          }
+        }
       }
 
       return { success: true };
@@ -63,6 +78,26 @@ export const notificationService = {
     try {
       const [hours, minutes] = time.split(':').map(Number);
       
+      let trigger: Notifications.NotificationTriggerInput;
+      
+      if (Platform.OS === 'ios') {
+        trigger = {
+          type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+          hour: hours,
+          minute: minutes,
+          repeats: true,
+        } as Notifications.CalendarTriggerInput;
+      } else {
+        // Android: use daily trigger
+        trigger = {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour: hours,
+          minute: minutes,
+          repeats: true,
+          channelId: 'medication-reminders',
+        } as Notifications.DailyTriggerInput;
+      }
+
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title: 'Time to take your medication',
@@ -76,12 +111,7 @@ export const notificationService = {
             type: 'medication-reminder',
           },
         },
-        trigger: {
-          hour: hours,
-          minute: minutes,
-          repeats: true, // Repeat daily
-          channelId: Platform.OS === 'android' ? 'medication-reminders' : undefined,
-        } as any,
+        trigger,
       });
 
       return { success: true, notificationId };
@@ -112,6 +142,26 @@ export const notificationService = {
         ? 'Time to take your medication'
         : `Time to take ${medications.length} medications`;
 
+      let trigger: Notifications.NotificationTriggerInput;
+      
+      if (Platform.OS === 'ios') {
+        trigger = {
+          type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+          hour: hours,
+          minute: minutes,
+          repeats: true,
+        } as Notifications.CalendarTriggerInput;
+      } else {
+        // Android: use daily trigger
+        trigger = {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour: hours,
+          minute: minutes,
+          repeats: true,
+          channelId: 'medication-reminders',
+        } as Notifications.DailyTriggerInput;
+      }
+
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title,
@@ -125,12 +175,7 @@ export const notificationService = {
             type: 'medication-reminder-group',
           },
         },
-        trigger: {
-          hour: hours,
-          minute: minutes,
-          repeats: true,
-          channelId: Platform.OS === 'android' ? 'medication-reminders' : undefined,
-        } as any,
+        trigger,
       });
 
       return { success: true, notificationId };

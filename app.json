@@ -21,7 +21,10 @@
           "remote-notification"
         ]
       },
-      "bundleIdentifier": "com.anonymous.medimate"
+      "bundleIdentifier": "com.anonymous.medimate",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "icon": "./assets/icon.png",
@@ -34,7 +37,10 @@
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
-        "WAKE_LOCK"
+        "WAKE_LOCK",
+        "POST_NOTIFICATIONS",
+        "USE_EXACT_ALARM",
+        "SCHEDULE_EXACT_ALARM"
       ],
       "package": "com.anonymous.medimate"
     },
